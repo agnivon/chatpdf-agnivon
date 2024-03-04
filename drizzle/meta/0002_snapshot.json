@@ -1,6 +1,6 @@
 {
-  "id": "b28aa612-fd28-4164-93bf-415f384fb6c2",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "0188699f-7367-4d30-ae86-c4463d430147",
+  "prevId": "b28aa612-fd28-4164-93bf-415f384fb6c2",
   "version": "5",
   "dialect": "pg",
   "tables": {
@@ -180,7 +180,8 @@
       "name": "user_system_enum",
       "values": {
         "system": "system",
-        "user": "user"
+        "user": "user",
+        "assistant": "assistant"
       }
     }
   },

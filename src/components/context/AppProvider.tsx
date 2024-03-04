@@ -15,7 +15,7 @@ export default function AppProvider({
       <Toaster
         //position="bottom-right"
         toastOptions={{
-          className: "text-sm w-[22rem] break-words overflow-hidden",
+          className: "text-foreground bg-background text-sm w-[22rem] break-words overflow-hidden",
           duration: 5000,
         }}
       />

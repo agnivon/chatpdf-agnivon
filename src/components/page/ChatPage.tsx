@@ -1,8 +1,9 @@
 "use client";
 
 import useGetChats from "@/hooks/data/useGetChats";
-import { Chat, ChatDocument } from "@/types";
-import { AlertTriangleIcon, InfoIcon, Loader2Icon } from "lucide-react";
+import { Chat, ChatDocument, ChatsResponse } from "@/types";
+import { AlertTriangleIcon, Loader2Icon } from "lucide-react";
+import ChatComponent from "../feature/ChatComponent";
 import ChatSidebar from "../feature/ChatSidebar";
 import DocumentViewer from "../feature/DocumentViewer";
 import {
@@ -10,17 +11,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "../ui/resizable";
-import ChatComponent from "../feature/ChatComponent";
 
-type MainComponentProps = {
-  chats: Chat[];
-  documents: ChatDocument[];
-  chatId: number;
+type MainComponentProps = ChatsResponse & {
+  chatId: string;
 };
 
 function MainComponent(props: MainComponentProps) {
-  const { chats, chatId, documents } = props;
-  const currentChatDocuments = documents.filter((doc) => doc.chatId === chatId);
+  const { chats, chatId, chatDocuments } = props;
+  const currentChatDocuments = chatDocuments[chatId];
   const currentChat = chats.find((chat) => chat.id === chatId);
   return (
     <div className="min-h-screen">
@@ -32,7 +30,11 @@ function MainComponent(props: MainComponentProps) {
           maxSize={20}
           order={1}
         >
-          <ChatSidebar chats={chats} chatId={chatId} documents={documents} />
+          <ChatSidebar
+            chats={chats}
+            chatId={chatId}
+            chatDocuments={chatDocuments}
+          />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel
@@ -62,13 +64,13 @@ function MainComponent(props: MainComponentProps) {
 export default function ChatPage(props: { params: { chatId: string } }) {
   const { query: chatsQuery } = useGetChats();
 
-  const chatId = parseInt(props.params.chatId);
+  const chatId = props.params.chatId;
 
   return (
-    <div className="bg-gradient-to-r from-rose-100 to-teal-100">
+    <div className="">
       {chatsQuery.isFetching ? (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex">
-          <Loader2Icon className="animate-spin mr-2 text-blue-500" />
+          <Loader2Icon className="animate-spin mr-2 text-accent-foreground" />
           <span>Loading...</span>
         </div>
       ) : chatsQuery.isSuccess ? (
@@ -76,7 +78,7 @@ export default function ChatPage(props: { params: { chatId: string } }) {
           <MainComponent
             chats={chatsQuery.data.chats!}
             chatId={chatId}
-            documents={chatsQuery.data.chatDocuments!}
+            chatDocuments={chatsQuery.data.chatDocuments!}
           />
         </>
       ) : (

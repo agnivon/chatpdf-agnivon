@@ -1,11 +1,7 @@
 import { db } from "@/lib/db";
 import { chat, chatDocument } from "@/lib/db/schema";
-import {
-  getDocumentEmbeddings,
-  loadDocuments,
-  splitDocuments,
-} from "@/lib/langchain";
-import { upsertVectors } from "@/lib/pinecone";
+import { loadDocuments, splitDocuments } from "@/lib/langchain";
+import { getPineconeVectorStore } from "@/lib/pinecone";
 import { downloadFilesFromS3, getS3Url } from "@/lib/s3";
 import { auth } from "@clerk/nextjs";
 import { eq } from "drizzle-orm";
@@ -13,55 +9,80 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { CreateChatValidationSchema } from "../_validation";
 
-async function pipeline(fileKeys: string[], chatId: number) {
-  console.log("Downloading files from S3");
+//export const runtime = "edge";
 
-  const fileNames = await downloadFilesFromS3(fileKeys);
+async function pipeline(fileKeys: string[], chatId: string) {
+  try {
+    console.log(`Chat ${chatId}: Downloading files from S3`);
 
-  // console.log(fileNames);
+    const fileBlobs = await downloadFilesFromS3(fileKeys);
 
-  console.log("Loading documents from files");
+    // console.log(fileNames);
 
-  const docs = await loadDocuments(fileNames);
+    console.log(`Chat ${chatId}: Loading documents from files`);
 
-  // console.log(docs);
+    const docs = await loadDocuments(fileBlobs);
 
-  console.log("Splitting documents");
+    // console.log(docs);
 
-  const splitDocs = await splitDocuments(docs);
+    console.log(`Chat ${chatId}: Splitting documents`);
 
-  console.log("Getting document embeddings");
+    const splitDocs = await splitDocuments(docs);
 
-  const vectors = await getDocumentEmbeddings(splitDocs);
+    const vectorStore = await getPineconeVectorStore(
+      process.env.PINECONE_INDEX!,
+      chatId
+    );
 
-  console.log("Upserting vectors into Pinecone");
+    //console.log(`Chat ${chatId}: Getting document embeddings`);
 
-  await upsertVectors(vectors, "chatpdf", chatId.toString());
+    //const vectors = await getDocumentEmbeddings(splitDocs);
 
-  console.log("Finished vector upsert");
+    //console.log(`Chat ${chatId}: Upserting vectors into Pinecone`);
 
-  await db
-    .update(chat)
-    .set({
-      status: "live",
-    })
-    .where(eq(chat.id, chatId));
+    console.log(`Chat ${chatId}: Adding documents to vector store`);
 
-  console.log("Chat processed successfully");
+    // await upsertVectors(
+    //   vectors,
+    //   process.env.PINECONE_INDEX!,
+    //   chatId.toString()
+    // );
+
+    await vectorStore.addDocuments(splitDocs);
+
+    console.log(`Chat ${chatId}: Finished vector upsert`);
+
+    await db
+      .update(chat)
+      .set({
+        status: "live",
+      })
+      .where(eq(chat.id, chatId));
+
+    console.log(`Chat ${chatId}: Chat live`);
+  } catch (err) {
+    console.log(err);
+    await db
+      .update(chat)
+      .set({
+        status: "failed",
+      })
+      .where(eq(chat.id, chatId));
+  }
 }
 
-export async function POST(request: NextRequest, response: NextResponse) {
+export async function POST(request: NextRequest) {
   const { userId } = auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
-  let newChatId: number = -1;
-  let newDocumentIds: number[] = [];
+  let newChatId: string = "";
+  let newDocumentIds: string[] = [];
   try {
     const files = CreateChatValidationSchema.parse(await request.json());
     const fileKeys = files.map((f) => f.fileKey);
 
-    console.log("Inserting entities into DB");
+    console.log(`User ${userId}: Inserting entities into DB`);
 
     newChatId = (
       await db
@@ -93,7 +114,7 @@ export async function POST(request: NextRequest, response: NextResponse) {
     ).map(({ id }) => id);
 
     pipeline(fileKeys, newChatId);
-
+    
     return NextResponse.json({
       chatId: newChatId,
     });
@@ -112,5 +133,3 @@ export async function POST(request: NextRequest, response: NextResponse) {
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
-
-

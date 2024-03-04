@@ -1,11 +1,10 @@
 import {
-  integer,
   pgEnum,
   pgTable,
-  serial,
   text,
   timestamp,
-  varchar,
+  uuid,
+  varchar
 } from "drizzle-orm/pg-core";
 
 export const ChatStatusEnum = pgEnum("chat_status_enum", [
@@ -13,18 +12,18 @@ export const ChatStatusEnum = pgEnum("chat_status_enum", [
   "live",
   "failed",
 ]);
-export const UserSystemEnum = pgEnum("user_system_enum", ["system", "user"]);
+export const UserSystemEnum = pgEnum("user_system_enum", ["system", "user", "assistant"]);
 
 export const chat = pgTable("chats", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   userId: varchar("user_id", { length: 256 }).notNull(),
   status: ChatStatusEnum("status").notNull().default("live"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const chatDocument = pgTable("documents", {
-  id: serial("id").primaryKey(),
-  chatId: integer("chat_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  chatId: uuid("chat_id")
     .notNull()
     .references(() => chat.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
@@ -34,9 +33,9 @@ export const chatDocument = pgTable("documents", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const message = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  chatId: integer("chat_id")
+export const chatMessage = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  chatId: uuid("chat_id")
     .notNull()
     .references(() => chat.id, { onDelete: "cascade" }),
   content: text("content").notNull(),

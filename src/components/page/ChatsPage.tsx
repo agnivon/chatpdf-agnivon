@@ -1,7 +1,7 @@
 "use client";
 
 import useGetChats from "@/hooks/data/useGetChats";
-import { Chat, ChatDocument } from "@/types";
+import { Chat, ChatDocument, ChatsResponse } from "@/types";
 import {
   AlertTriangleIcon,
   ArrowLeftCircleIcon,
@@ -14,18 +14,15 @@ import {
   ResizablePanelGroup,
 } from "../ui/resizable";
 
-type MainComponentProps = {
-  chats: Chat[];
-  documents: ChatDocument[];
-};
+type MainComponentProps = ChatsResponse;
 
 function MainComponent(props: MainComponentProps) {
-  const { chats, documents } = props;
+  const { chats, chatDocuments } = props;
   return (
-    <div className="min-h-screen bg-gradient-to-r from-rose-100 to-teal-100">
+    <div className="min-h-screen">
       <ResizablePanelGroup className="w-full h-screen" direction="horizontal">
-        <ResizablePanel className="h-screen" defaultSize={15} order={1}>
-          <ChatSidebar chats={chats} documents={documents} />
+        <ResizablePanel className="h-screen" minSize={15} maxSize={25} order={1}>
+          <ChatSidebar chats={chats} chatDocuments={chatDocuments} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel
@@ -33,7 +30,7 @@ function MainComponent(props: MainComponentProps) {
           defaultSize={85}
           order={2}
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex text-3xl text-gray-400 items-center">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex text-3xl text-accent-foreground/60 items-center">
             <ArrowLeftCircleIcon className="w-8 h-8 mr-2" />
             Select a chat from the sidebar
           </div>
@@ -50,14 +47,14 @@ export default function ChatsPage() {
     <>
       {chatsQuery.isFetching ? (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex">
-          <Loader2Icon className="animate-spin mr-2 text-blue-500" />
+          <Loader2Icon className="animate-spin mr-2 text-accent-foreground" />
           <span>Loading...</span>
         </div>
       ) : chatsQuery.isSuccess ? (
         <>
           <MainComponent
             chats={chatsQuery.data.chats!}
-            documents={chatsQuery.data.chatDocuments!}
+            chatDocuments={chatsQuery.data.chatDocuments!}
           />
         </>
       ) : (

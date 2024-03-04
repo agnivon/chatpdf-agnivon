@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 export default function useGetMessages(
-  chatId: number | undefined,
+  chatId: string | undefined,
   enabled: boolean = true
 ) {
   const query = useQuery({

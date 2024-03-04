@@ -6,17 +6,17 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 
-export default function useCreateChat() {
+export default function useCreateChat(ragServer: boolean = false) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  const url = ragServer ? "/api/chat/rs/create" : "/api/chat/create";
+
   const mutation = useMutation({
     mutationFn: (data: z.infer<typeof CreateChatValidationSchema>) =>
-      axios
-        .post<CreateChatResponse>("/api/chat/create", data)
-        .then((res) => res.data),
+      axios.post<CreateChatResponse>(url, data).then((res) => res.data),
     onSuccess: async ({ chatId }) => {
-      await queryClient.invalidateQueries({ queryKey: ["chats"], exact:true });
+      await queryClient.invalidateQueries({ queryKey: ["chats"], exact: true });
       const path = ROUTES.CHAT(chatId);
       router.push(path);
     },

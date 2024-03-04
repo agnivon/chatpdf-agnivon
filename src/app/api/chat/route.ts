@@ -1,36 +1,40 @@
 import { db } from "@/lib/db";
-import { message } from "@/lib/db/schema";
-import { getTextEmbedding } from "@/lib/langchain";
-import { queryVectors } from "@/lib/pinecone";
-import { OpenAIStream, StreamingTextResponse } from "ai";
-import { NextRequest } from "next/server";
-import OpenAI from "openai";
+import { chatMessage } from "@/lib/db/schema";
+import { convertIntoLangchainMessages, getRAGChain } from "@/lib/langchain";
+import { getPineconeVectorStore } from "@/lib/pinecone";
+import { LangChainStream, StreamingTextResponse } from "ai";
+import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { ChatValidationSchema } from "./_validation";
 
-export const runtime =
-  process.env.NODE_ENV === "production" ? "edge" : undefined;
+//export const runtime = "edge";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY!,
+// });
 
-async function pipeline(query: string, chatId: number) {
-  const queryEmbeddings = (await getTextEmbedding(query)).flat();
+// async function pipeline(query: string, chatId: string) {
+//   const queryEmbeddings = (await getTextEmbedding(query)).flat();
 
-  //console.log("Query Embeddings", queryEmbeddings);
+//   //console.log("Query Embeddings", queryEmbeddings);
 
-  const matches = (
-    await queryVectors(queryEmbeddings, "chatpdf", chatId.toString(), 10)
-  ).matches; /* .filter((match) => (match?.score || 0) > 0.7); */
+//   const matches = (
+//     await queryVectors(
+//       queryEmbeddings,
+//       process.env.PINECONE_INDEX!,
+//       chatId.toString(),
+//       10
+//     )
+//   ).matches; /* .filter((match) => (match?.score || 0) > 0.7); */
 
-  //console.log("Matches", matches);
+//   //console.log("Matches", matches);
 
-  const matchedText = matches
-    .map((match) => match.metadata?.text || "")
-    .join("\n");
+//   const matchedText = matches
+//     .map((match) => match.metadata?.text || "")
+//     .join("\n");
 
-  return matchedText;
-}
+//   return matchedText;
+// }
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,56 +44,116 @@ export async function POST(request: NextRequest) {
 
     const query = messages[messages.length - 1].content;
 
-    const context = await pipeline(query, chatId);
+    // const context = await pipeline(query, chatId);
 
-    //console.log(context);
+    // //console.log(context);
 
-    const prompt = {
-      role: "system" as const,
-      content: `AI assistant is a brand new, powerful, human-like artificial intelligence.
-        The traits of AI include expert knowledge, helpfulness, cleverness, and articulateness.
-        AI is a well-behaved and well-mannered individual.
-        AI is always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
-        AI has the sum of all knowledge in their brain, and is able to accurately answer nearly any question about any topic in conversation.
-        AI assistant is a big fan of Pinecone and Vercel.
-        START CONTEXT BLOCK
-        ${context}
-        END OF CONTEXT BLOCK
-        AI assistant will take into account any CONTEXT BLOCK that is provided in a conversation.
-        If the context does not provide the answer to question, the AI assistant will say, "I'm sorry, but I don't know the answer to that question".
-        AI assistant will not apologize for previous responses, but instead will indicated new information was gained.
-        AI assistant will not invent anything that is not drawn directly from the context.
-        `,
-    };
+    // const response = await openai.chat.completions.create({
+    //   model: "gpt-3.5-turbo",
+    //   stream: true,
+    //   messages: [
+    //     prompt,
+    //     ...messages.filter((message) => message.role === "user"),
+    //   ],
+    // });
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      stream: true,
-      messages: [
-        prompt,
-        ...messages.filter((message) => message.role === "user"),
-      ],
-    });
-
-    const stream = OpenAIStream(response, {
+    const { stream, handlers } = LangChainStream({
       onStart: async () => {
-        await db.insert(message).values({
+        await db.insert(chatMessage).values({
           chatId,
           content: query,
           role: "user",
         });
       },
       onCompletion: async (completion) => {
-        await db.insert(message).values({
+        await db.insert(chatMessage).values({
           chatId,
           content: completion,
-          role: "system",
+          role: "assistant",
         });
       },
     });
 
+    const vectorStore = await getPineconeVectorStore(
+      process.env.PINECONE_INDEX!,
+      chatId
+    );
+
+    const context = await vectorStore.maxMarginalRelevanceSearch(query, {
+      fetchK: 10,
+      k: 5,
+    });
+
+    console.log(context);
+
+    //console.log(context);
+
+    //const context = await vectorStore.asRetriever().invoke(query);
+
+    // const ragChain = await getRAGChain();
+
+    // ragChain.invoke(
+    //   {
+    //     context,
+    //     question: query,
+    //   },
+    //   {
+    //     callbacks: [handlers],
+    //   }
+    // );
+
+    // ragChain.invoke({
+    //   chat_history: convertIntoLangchainMessages(messages),
+    //   question: query,
+    // });
+
+    // const stream = OpenAIStream(response, {
+    //   onStart: async () => {
+    //     await db.insert(message).values({
+    //       chatId,
+    //       content: query,
+    //       role: "user",
+    //     });
+    //   },
+    //   onCompletion: async (completion) => {
+    //     await db.insert(message).values({
+    //       chatId,
+    //       content: completion,
+    //       role: "system",
+    //     });
+    //   },
+    // });
+
+    // const conversationalChain = await getConversationalRetrieverChain(
+    //   vectorStore.asRetriever() as RunnableLike<
+    //     string,
+    //     Document<Record<string, any>>[]
+    //   >,
+    //   [handlers]
+    // );
+
+    // conversationalChain.invoke({
+    //   messages: convertIntoLangchainMessages(messages),
+    // });
+
+    const documentChain = await getRAGChain();
+
+    documentChain.invoke(
+      {
+        context,
+        messages: convertIntoLangchainMessages(messages),
+      },
+      {
+        callbacks: [handlers],
+      }
+    );
+
     return new StreamingTextResponse(stream);
   } catch (err) {
     console.log(err);
+    if (err instanceof ZodError) {
+      return NextResponse.json({ errors: err.errors }, { status: 400 });
+    }
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

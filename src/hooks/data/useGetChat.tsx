@@ -4,7 +4,7 @@ import axios from "axios";
 import { produce } from "immer";
 
 export default function useGetChat(
-  chatId: number | undefined,
+  chatId: string | undefined,
   refetchInterval?: number | undefined
 ) {
   const queryClient = useQueryClient();
@@ -36,7 +36,7 @@ export default function useGetChat(
           return responseData;
         }),
     enabled: !!chatId,
-    refetchOnMount: "always",
+    //refetchOnMount: "always",
     refetchInterval,
     refetchIntervalInBackground: true,
   });

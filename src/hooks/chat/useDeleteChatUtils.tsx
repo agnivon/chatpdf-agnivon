@@ -4,12 +4,12 @@ import { toast } from "react-hot-toast";
 import { ROUTES } from "@/constants/route.constans";
 import React from "react";
 
-export default function useDeleteChatUtils(chatId: number | undefined) {
+export default function useDeleteChatUtils(chatId: string | undefined) {
   const { mutation: deleteChat } = useDeleteChat();
   const router = useRouter();
 
   const handleDeleteChat = React.useCallback(
-    (dChatId: number) => {
+    (dChatId: string) => {
       const toastId = toast.loading("Deleting chat...");
       deleteChat.mutate(dChatId, {
         onSuccess: () => {
@@ -22,7 +22,7 @@ export default function useDeleteChatUtils(chatId: number | undefined) {
     [deleteChat, chatId, router]
   );
 
-  const [dChatId, setDChatId] = React.useState<number | null>(null);
+  const [dChatId, setDChatId] = React.useState<string | null>(null);
 
   const showCModal = !!dChatId;
 

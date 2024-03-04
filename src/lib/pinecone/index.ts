@@ -1,8 +1,15 @@
+import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
+import { hfEM } from "../langchain";
 import { chunkArray } from "../utils";
+
 
 if (!process.env.PINECONE_API_KEY) {
   throw new Error(`PINECONE_API_KEY not defined`);
+}
+
+if (!process.env.PINECONE_INDEX) {
+  throw new Error(`PINECONE_INDEX not defined`);
 }
 
 const UPSERT_CHUNK_SIZE = 1000;
@@ -44,7 +51,21 @@ export async function deleteAllNamespaceVectors(
   namespace: string
 ) {
   const pineconeIndex = pinecone.Index(index);
-  return pineconeIndex.namespace(namespace).deleteAll();
+  return pineconeIndex
+    .namespace(namespace)
+    .deleteAll()
+    .then(() => {
+      console.log(`${namespace} vectors deleted`);
+    });
+}
+
+export function getPineconeVectorStore(index: string, namespace: string) {
+  const pineconeIndex = pinecone.Index(index);
+  const pineconeStore = PineconeStore.fromExistingIndex(hfEM, {
+    pineconeIndex,
+    namespace,
+  });
+  return pineconeStore;
 }
 
 export default pinecone;

@@ -6,6 +6,8 @@ import { auth } from "@clerk/nextjs";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
+//export const runtime = "edge";
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { chatId: string } }
@@ -15,7 +17,7 @@ export async function GET(
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
-    const chatId = parseInt(params.chatId);
+    const chatId = params.chatId;
 
     const selectedChat = (
       await db
@@ -23,6 +25,9 @@ export async function GET(
         .from(chat)
         .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
     )[0];
+
+    if (!selectedChat)
+      return new NextResponse("Chat not found", { status: 404 });
 
     return NextResponse.json(selectedChat);
   } catch (err) {
@@ -40,7 +45,7 @@ export async function DELETE(
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
-    const chatId = parseInt(params.chatId);
+    const chatId = params.chatId;
 
     const selectedChat = (
       await db
@@ -49,7 +54,8 @@ export async function DELETE(
         .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
     )[0];
 
-    if (!selectedChat) return new NextResponse("Unauthorized", { status: 401 });
+    if (!selectedChat)
+      return new NextResponse("Chat not found", { status: 404 });
 
     const documentFileKeys = (
       await db
@@ -64,7 +70,7 @@ export async function DELETE(
 
     console.log(`Deleted chat: ${chatId}`);
 
-    deleteAllNamespaceVectors("chatpdf", chatId.toString());
+    deleteAllNamespaceVectors(process.env.PINECONE_INDEX!, chatId.toString());
 
     deleteS3Files(documentFileKeys);
 

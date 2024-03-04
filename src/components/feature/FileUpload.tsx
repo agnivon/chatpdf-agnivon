@@ -33,7 +33,7 @@ export default function FileUpload() {
     >
   >({});
   const { mutation: uploadS3File } = useUploadS3File();
-  const { mutation: createChat } = useCreateChat();
+  const { mutation: createChat } = useCreateChat(true);
 
   const uploadedFilesArray = React.useMemo(
     () => Object.values(uploadedFiles),
@@ -113,16 +113,16 @@ export default function FileUpload() {
   const thumbs = React.useMemo(() => {
     return uploadedFilesArray.map(({ file, status, id }) => (
       <div
-        className="flex items-center border rounded-md w-full p-3 box-border"
+        className="flex items-center border border-secondary-foreground/40 rounded-md w-full p-3 box-border"
         key={id}
       >
-        <FileIcon className="h-6 w-6 mr-2 text-secondary-foreground" />
+        <FileIcon className="h-6 w-6 mr-2 text-secondary-foreground/60 shrink-0" />
         <span className="text-secondary-foreground line-clamp-1 break-all">
           {file.name}
         </span>
-        <span className="inline-flex ml-auto">
+        <span className="inline-flex ml-auto shrink-0">
           {status === "uploaded" ? (
-            <CheckCircleIcon className="h-5 w-5 text-green-600" />
+            <CheckCircleIcon className="h-5 w-5 text-secondary-foreground/90" />
           ) : status === "error" ? (
             <AlertCircleIcon className="h-5 w-5 text-destructive" />
           ) : (
@@ -134,17 +134,19 @@ export default function FileUpload() {
   }, [uploadedFilesArray]);
 
   return (
-    <div className="p-2 bg-white rounded-xl w-[32rem]">
+    <div className="p-2 rounded-xl w-[32rem] bg-gradient">
       <div
         {...getRootProps({
           className:
-            "border-dashed border-2 rounded-xl cursor-pointer hover:bg-gray-50 py-8 flex justify-center items-center flex-col",
+            " border-dashed border-secondary-foreground/60 hover:border-secondary-foreground border rounded-xl cursor-pointer py-8 flex justify-center items-center flex-col",
         })}
       >
         <input {...getInputProps()} />
         <>
-          <InboxIcon className="w-10 h-10 text-blue-500" />
-          <p className="mt-2 text-sm text-slate-400">Drop PDF here</p>
+          <InboxIcon className="w-10 h-10 text-accent-foreground" />
+          <p className="mt-2 text-sm text-secondary-foreground">
+            Drop PDF here
+          </p>
         </>
       </div>
       {thumbs.length > 0 && (

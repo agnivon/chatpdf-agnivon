@@ -62,3 +62,11 @@ export function convertToAscii(inputString: string) {
   const asciiString = inputString.replace(/[^\x00-\x7F]+/g, "");
   return asciiString;
 }
+
+export function range(start: number, end: number) {
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+export function isDevEnv() {
+  return process.env.NODE_ENV === "development";
+}

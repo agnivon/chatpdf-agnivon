@@ -5,7 +5,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import fs from "fs";
+import { fromEnv } from "@aws-sdk/credential-providers";
 
 if (!process.env.AWS_ACCESS_KEY_ID) {
   throw new Error(`AWS_ACCESS_KEY_ID not defined`);
@@ -16,9 +16,13 @@ if (!process.env.AWS_SECRET_ACCESS_KEY) {
 if (!process.env.S3_BUCKET_NAME) {
   throw new Error(`S3_BUCKET_NAME not defined`);
 }
+if (!process.env.S3_BUCKET_REGION) {
+  throw new Error(`S3_BUCKET_REGION not defined`);
+}
 
 const s3 = new S3Client({
-  region: "ap-south-1",
+  region: process.env.S3_BUCKET_REGION,
+  credentials: fromEnv()
 });
 
 export async function uploadFileToS3(
@@ -59,9 +63,8 @@ export async function downloadFilesFromS3(fileKeys: string[]) {
       });
       const response = await s3.send(command);
       const file = await response.Body?.transformToByteArray();
-      const fileName = `/tmp/doc-${Date.now()}`;
-      fs.writeFileSync(fileName, file!);
-      return fileName;
+      const fileBlob = new Blob([file || ""]);
+      return fileBlob;
     })
   );
 }
@@ -74,12 +77,12 @@ export async function deleteS3Files(fileKeys: string[]) {
     },
   });
 
-  await s3.send(command).then((_data) => {
+  return s3.send(command).then((_data) => {
     console.log(`Successfully deleted files from S3`);
   });
 }
 
 export function getS3Url(fileKey: string) {
-  const url = `https://${process.env.S3_BUCKET_NAME}.s3.ap-south-1.amazonaws.com/${fileKey}`;
+  const url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_BUCKET_REGION}.amazonaws.com/${fileKey}`;
   return url;
 }

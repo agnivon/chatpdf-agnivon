@@ -23,25 +23,27 @@ export const CreateChatValidationSchema = z
 
 export const ChatValidationSchema = z
   .object({
-    messages: z.array(
-      z
-        .object({
-          role: z.enum([
-            //"function",
-            //"data",
-            "user",
-            "system",
-            //"tool",
-            "assistant",
-          ]),
-          content: z.string().max(5000),
-        })
-        .required({
-          role: true,
-          content: true,
-        })
-    ),
-    chatId: z.coerce.number(),
+    messages: z
+      .array(
+        z
+          .object({
+            role: z.enum([
+              //"function",
+              //"data",
+              "user",
+              "system",
+              //"tool",
+              "assistant",
+            ]),
+            content: z.string().max(5000),
+          })
+          .required({
+            role: true,
+            content: true,
+          })
+      )
+      .max(200),
+    chatId: z.string(),
   })
   .required({
     chatId: true,

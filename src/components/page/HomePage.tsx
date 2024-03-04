@@ -11,7 +11,7 @@ export default async function HomePage() {
   const isAuthenticated = !!userId;
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-r from-rose-100 to-teal-100">
+    <div className="w-full min-h-screen">
       <div className="fixed top-5 right-5">
         <UserButton afterSignOutUrl={ROUTES.HOME} />
       </div>
@@ -29,7 +29,7 @@ export default async function HomePage() {
               </Link>
             )}
           </div>
-          <p className="max-w-xl mt-1 text-lg text-slate-600">
+          <p className="max-w-xl mt-1 text-lg text-foreground/60">
             Join millions of students, researchers and professionals to
             instantly answer questions and understand research with AI
           </p>
