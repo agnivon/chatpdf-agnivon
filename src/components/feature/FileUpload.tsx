@@ -3,6 +3,7 @@ import { MAX_FILE_NUMBER_UPLOAD_LIMIT } from "@/constants/validation.constants";
 import useCreateChat from "@/hooks/data/useCreateChat";
 import useUploadS3File from "@/hooks/data/useUploadS3File";
 import { fileValidator } from "@/lib/utils";
+import { useOpenAIApiKey } from "@/store";
 import { S3FileUploadResponse } from "@/types";
 import {
   AlertCircleIcon,
@@ -18,7 +19,10 @@ import { DropzoneOptions, useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { useImmer } from "use-immer";
 import { v4 as uuidv4 } from "uuid";
+import RenderIf from "../global/RenderIf";
 import { Button } from "../ui/button";
+import { Card } from "../ui/card";
+import OpenAIApiKeyEntry from "./openai/OpenAIApiKeyEntry";
 
 export default function FileUpload() {
   const [uploadedFiles, setUploadedFiles] = useImmer<
@@ -33,7 +37,9 @@ export default function FileUpload() {
     >
   >({});
   const { mutation: uploadS3File } = useUploadS3File();
-  const { mutation: createChat } = useCreateChat(true);
+  const { mutation: createChat } = useCreateChat();
+
+  const openAIApiKey = useOpenAIApiKey();
 
   const uploadedFilesArray = React.useMemo(
     () => Object.values(uploadedFiles),
@@ -134,39 +140,48 @@ export default function FileUpload() {
   }, [uploadedFilesArray]);
 
   return (
-    <div className="p-2 rounded-xl w-[32rem] bg-gradient">
-      <div
-        {...getRootProps({
-          className:
-            " border-dashed border-secondary-foreground/60 hover:border-secondary-foreground border rounded-xl cursor-pointer py-8 flex justify-center items-center flex-col",
-        })}
-      >
-        <input {...getInputProps()} />
-        <>
-          <InboxIcon className="w-10 h-10 text-accent-foreground" />
-          <p className="mt-2 text-sm text-secondary-foreground">
-            Drop PDF here
-          </p>
-        </>
-      </div>
-      {thumbs.length > 0 && (
-        <aside className="flex flex-wrap mt-3 space-y-2">{thumbs}</aside>
-      )}
-      {uploadedFilesArray.length > 0 && (
-        <Button
-          className="w-full mt-3 text-base"
-          size={"lg"}
-          onClick={handleCreateChat}
-          disabled={uploadS3File.isPending || createChat.isPending}
-        >
-          {createChat.isPending ? (
-            <Loader2Icon className="h-5 w-5 mr-2 animate-spin" />
-          ) : (
-            <MessageCircleIcon className="h-5 w-5 mr-2" />
+    <>
+      <RenderIf isTrue={!!openAIApiKey}>
+        <div className="p-2 rounded-xl w-[32rem] bg-gradient">
+          <div
+            {...getRootProps({
+              className:
+                " border-dashed border-secondary-foreground/60 hover:border-secondary-foreground border rounded-xl cursor-pointer py-8 flex justify-center items-center flex-col",
+            })}
+          >
+            <input {...getInputProps()} />
+            <>
+              <InboxIcon className="w-10 h-10 text-accent-foreground" />
+              <p className="mt-2 text-sm text-secondary-foreground">
+                Drop PDF here
+              </p>
+            </>
+          </div>
+          {thumbs.length > 0 && (
+            <aside className="flex flex-wrap mt-3 space-y-2">{thumbs}</aside>
           )}
-          Create Chat
-        </Button>
-      )}
-    </div>
+          {uploadedFilesArray.length > 0 && (
+            <Button
+              className="w-full mt-3 text-base"
+              size={"lg"}
+              onClick={handleCreateChat}
+              disabled={uploadS3File.isPending || createChat.isPending}
+            >
+              {createChat.isPending ? (
+                <Loader2Icon className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <MessageCircleIcon className="h-5 w-5 mr-2" />
+              )}
+              Create Chat
+            </Button>
+          )}
+        </div>
+      </RenderIf>
+      <RenderIf isTrue={!openAIApiKey}>
+        <Card className="p-6">
+          <OpenAIApiKeyEntry />
+        </Card>
+      </RenderIf>
+    </>
   );
 }

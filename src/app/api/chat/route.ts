@@ -1,11 +1,18 @@
 import { db } from "@/lib/db";
 import { chatMessage } from "@/lib/db/schema";
-import { convertIntoLangchainMessages, getRAGChain } from "@/lib/langchain";
+import {
+  convertIntoLangchainMessages,
+  getContextualizedQRAGChain,
+} from "@/lib/langchain";
 import { getPineconeVectorStore } from "@/lib/pinecone";
 import { LangChainStream, StreamingTextResponse } from "ai";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { ChatValidationSchema } from "./_validation";
+
+import { RunnableLike } from "@langchain/core/runnables";
+import { Document } from "langchain/document";
 
 //export const runtime = "edge";
 
@@ -38,9 +45,8 @@ import { ChatValidationSchema } from "./_validation";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, chatId } = ChatValidationSchema.parse(
-      await request.json()
-    );
+    const { messages, chatId, regenerate, openAIApiKey } =
+      ChatValidationSchema.parse(await request.json());
 
     const query = messages[messages.length - 1].content;
 
@@ -58,95 +64,83 @@ export async function POST(request: NextRequest) {
     // });
 
     const { stream, handlers } = LangChainStream({
-      onStart: async () => {
-        await db.insert(chatMessage).values({
-          chatId,
-          content: query,
-          role: "user",
-        });
+      onStart: () => {
+        if (!regenerate) {
+          db.insert(chatMessage)
+            .values({
+              chatId,
+              content: query,
+              role: "user",
+            })
+            .execute();
+        }
       },
-      onCompletion: async (completion) => {
-        await db.insert(chatMessage).values({
-          chatId,
-          content: completion,
-          role: "assistant",
-        });
+      onFinal: async (completion) => {
+        if (regenerate) {
+          const result = await db.query.chatMessage.findFirst({
+            where: eq(chatMessage.chatId, chatId),
+            columns: {
+              id: true,
+            },
+            orderBy: (messages, { desc }) => [desc(messages.createdAt)],
+          });
+          if (result) {
+            db.update(chatMessage)
+              .set({ content: completion })
+              .where(eq(chatMessage.id, result.id))
+              .execute();
+          }
+        } else {
+          db.insert(chatMessage)
+            .values({
+              chatId,
+              content: completion,
+              role: "assistant",
+            })
+            .execute();
+        }
       },
     });
 
     const vectorStore = await getPineconeVectorStore(
       process.env.PINECONE_INDEX!,
-      chatId
+      chatId,
+      openAIApiKey
     );
 
-    const context = await vectorStore.maxMarginalRelevanceSearch(query, {
-      fetchK: 10,
+    const retriever = vectorStore.asRetriever({
+      searchType: "mmr",
+      searchKwargs: { fetchK: 10 },
       k: 5,
-    });
+    }) as RunnableLike<string, Document<Record<string, any>>[]>;
 
-    console.log(context);
+    // const context = await vectorStore.maxMarginalRelevanceSearch(query, {
+    //   fetchK: 10,
+    //   k: 5,
+    // });
 
-    //console.log(context);
+    // const documentChain = await getRAGChain(undefined, openAIApiKey);
 
-    //const context = await vectorStore.asRetriever().invoke(query);
-
-    // const ragChain = await getRAGChain();
-
-    // ragChain.invoke(
+    // documentChain.invoke(
     //   {
     //     context,
-    //     question: query,
+    //     messages: convertIntoLangchainMessages(messages),
     //   },
     //   {
     //     callbacks: [handlers],
     //   }
     // );
 
-    // ragChain.invoke({
-    //   chat_history: convertIntoLangchainMessages(messages),
-    //   question: query,
-    // });
-
-    // const stream = OpenAIStream(response, {
-    //   onStart: async () => {
-    //     await db.insert(message).values({
-    //       chatId,
-    //       content: query,
-    //       role: "user",
-    //     });
-    //   },
-    //   onCompletion: async (completion) => {
-    //     await db.insert(message).values({
-    //       chatId,
-    //       content: completion,
-    //       role: "system",
-    //     });
-    //   },
-    // });
-
-    // const conversationalChain = await getConversationalRetrieverChain(
-    //   vectorStore.asRetriever() as RunnableLike<
-    //     string,
-    //     Document<Record<string, any>>[]
-    //   >,
-    //   [handlers]
-    // );
-
-    // conversationalChain.invoke({
-    //   messages: convertIntoLangchainMessages(messages),
-    // });
-
-    const documentChain = await getRAGChain();
-
-    documentChain.invoke(
-      {
-        context,
-        messages: convertIntoLangchainMessages(messages),
-      },
-      {
-        callbacks: [handlers],
-      }
+    const contextualizeQChain = await getContextualizedQRAGChain(
+      retriever,
+      [handlers],
+      openAIApiKey
     );
+
+    contextualizeQChain.invoke({
+      question: query,
+      chat_history: convertIntoLangchainMessages(messages),
+    });
 
     return new StreamingTextResponse(stream);
   } catch (err) {

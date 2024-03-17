@@ -1,6 +1,13 @@
 "use client";
 import { chat, chatDocument, chatMessage } from "@/lib/db/schema";
 
+export type ChatPDFStore = {
+  openAIApiKey: string;
+  showOpenAIApiKeyDialog: boolean;
+  setOpenAIApiKey: (openAIApiKey: string) => void;
+  setShowOpenAIApiKeyDialog: (show: boolean) => void;
+};
+
 export type S3FileUploadResponse = {
   fileKey: string;
   fileName: string;

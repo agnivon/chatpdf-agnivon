@@ -1,6 +1,5 @@
 import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { hfEM } from "../langchain";
-
+import { openAIEm } from "../langchain";
 
 // export async function createCollection(collectionName: string) {
 //   return client.createCollection({
@@ -10,7 +9,7 @@ import { hfEM } from "../langchain";
 // }
 
 export async function getChromaVectorStore(collectionName: string) {
-  const chromaStore = Chroma.fromExistingCollection(hfEM, {
+  const chromaStore = Chroma.fromExistingCollection(openAIEm, {
     collectionName,
   });
   return chromaStore;

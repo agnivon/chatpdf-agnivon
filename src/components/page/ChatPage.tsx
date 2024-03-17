@@ -1,16 +1,17 @@
 "use client";
 
 import useGetChats from "@/hooks/data/useGetChats";
-import { Chat, ChatDocument, ChatsResponse } from "@/types";
+import { ChatsResponse } from "@/types";
 import { AlertTriangleIcon, Loader2Icon } from "lucide-react";
-import ChatComponent from "../feature/ChatComponent";
-import ChatSidebar from "../feature/ChatSidebar";
+import ChatComponent from "../feature/chat/ChatComponent";
+import ChatSidebar from "../feature/chat/ChatSidebar";
 import DocumentViewer from "../feature/DocumentViewer";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "../ui/resizable";
+import ChatContext from "@/context/ChatContext";
 
 type MainComponentProps = ChatsResponse & {
   chatId: string;
@@ -39,22 +40,22 @@ function MainComponent(props: MainComponentProps) {
         <ResizableHandle withHandle />
         <ResizablePanel
           className="h-screen"
-          defaultSize={45}
-          minSize={30}
-          maxSize={50}
+          defaultSize={40}
           order={2}
+          minSize={30}
+          maxSize={55}
         >
-          <DocumentViewer documents={currentChatDocuments} />
+          <ChatComponent chatId={chatId} currentChat={currentChat} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel
           className="h-screen"
-          defaultSize={40}
+          defaultSize={45}
+          minSize={35}
+          maxSize={50}
           order={3}
-          minSize={30}
-          maxSize={60}
         >
-          <ChatComponent chatId={chatId} currentChat={currentChat} />
+          <DocumentViewer documents={currentChatDocuments} />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
@@ -67,7 +68,7 @@ export default function ChatPage(props: { params: { chatId: string } }) {
   const chatId = props.params.chatId;
 
   return (
-    <div className="">
+    <ChatContext.Provider value={{ chatId }}>
       {chatsQuery.isFetching ? (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex">
           <Loader2Icon className="animate-spin mr-2 text-accent-foreground" />
@@ -87,6 +88,6 @@ export default function ChatPage(props: { params: { chatId: string } }) {
           <span>Error</span>
         </div>
       )}
-    </div>
+    </ChatContext.Provider>
   );
 }

@@ -1,8 +1,7 @@
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
-import { hfEM } from "../langchain";
+import { getOpenAIEm, openAIEm } from "../langchain";
 import { chunkArray } from "../utils";
-
 
 if (!process.env.PINECONE_API_KEY) {
   throw new Error(`PINECONE_API_KEY not defined`);
@@ -59,9 +58,14 @@ export async function deleteAllNamespaceVectors(
     });
 }
 
-export function getPineconeVectorStore(index: string, namespace: string) {
+export function getPineconeVectorStore(
+  index: string,
+  namespace: string,
+  openAIaPIKey?: string
+) {
+  const embeddingModel = getOpenAIEm(openAIaPIKey);
   const pineconeIndex = pinecone.Index(index);
-  const pineconeStore = PineconeStore.fromExistingIndex(hfEM, {
+  const pineconeStore = PineconeStore.fromExistingIndex(embeddingModel, {
     pineconeIndex,
     namespace,
   });

@@ -12,15 +12,15 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import Link from "next/link";
-import { ConfirmationDialog } from "../global/ConfirmationDialog";
-import { Button } from "../ui/button";
+import { ConfirmationDialog } from "../../global/ConfirmationDialog";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+} from "../../ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
 
 type ChatSidebarProps = ChatsResponse & {
   chatId?: string;

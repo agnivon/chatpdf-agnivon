@@ -9,14 +9,7 @@ export default function useGetMessages(
   const query = useQuery({
     queryKey: ["messages", chatId],
     queryFn: () =>
-      axios
-        .get<ChatMessageResponse>(`/api/chat/${chatId}/messages`)
-        .then((res) => {
-          return res.data.map((d) => ({
-            ...d,
-            id: d.id.toString(),
-          }));
-        }),
+      axios.get<ChatMessageResponse>(`/api/chat/${chatId}/messages`).then(res => res.data),
     enabled,
     refetchOnMount: "always",
   });

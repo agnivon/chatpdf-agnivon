@@ -11,7 +11,11 @@ import { CreateChatValidationSchema } from "../_validation";
 
 //export const runtime = "edge";
 
-async function pipeline(fileKeys: string[], chatId: string) {
+async function pipeline(
+  fileKeys: string[],
+  chatId: string,
+  openAIaPIKey?: string | undefined
+) {
   try {
     console.log(`Chat ${chatId}: Downloading files from S3`);
 
@@ -31,7 +35,8 @@ async function pipeline(fileKeys: string[], chatId: string) {
 
     const vectorStore = await getPineconeVectorStore(
       process.env.PINECONE_INDEX!,
-      chatId
+      chatId,
+      openAIaPIKey
     );
 
     //console.log(`Chat ${chatId}: Getting document embeddings`);
@@ -79,7 +84,7 @@ export async function POST(request: NextRequest) {
   let newChatId: string = "";
   let newDocumentIds: string[] = [];
   try {
-    const files = CreateChatValidationSchema.parse(await request.json());
+    const files = CreateChatValidationSchema.parse(await request.json()).files;
     const fileKeys = files.map((f) => f.fileKey);
 
     console.log(`User ${userId}: Inserting entities into DB`);
@@ -114,19 +119,20 @@ export async function POST(request: NextRequest) {
     ).map(({ id }) => id);
 
     pipeline(fileKeys, newChatId);
-    
+
     return NextResponse.json({
       chatId: newChatId,
     });
   } catch (err) {
     console.log(err);
-    await db
-      .update(chat)
-      .set({
-        status: "failed",
-      })
-      .where(eq(chat.id, newChatId));
-
+    if (newChatId) {
+      await db
+        .update(chat)
+        .set({
+          status: "failed",
+        })
+        .where(eq(chat.id, newChatId));
+    }
     if (err instanceof ZodError) {
       return NextResponse.json({ errors: err.errors }, { status: 400 });
     }

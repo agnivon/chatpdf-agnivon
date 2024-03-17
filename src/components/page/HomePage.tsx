@@ -1,9 +1,10 @@
-import { UserButton, auth } from "@clerk/nextjs";
-import { Button } from "../ui/button";
-import Link from "next/link";
 import { ROUTES } from "@/constants/route.constans";
+import { UserButton, auth } from "@clerk/nextjs";
 import { ArrowRightIcon, LogInIcon } from "lucide-react";
+import Link from "next/link";
 import FileUpload from "../feature/FileUpload";
+import { Button } from "../ui/button";
+import ChangeKeyButton from "../feature/ChangeKeyButton";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -12,7 +13,8 @@ export default async function HomePage() {
 
   return (
     <div className="w-full min-h-screen">
-      <div className="fixed top-5 right-5">
+      <div className="fixed top-5 right-5 flex gap-3 items-center">
+        <ChangeKeyButton />
         <UserButton afterSignOutUrl={ROUTES.HOME} />
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">

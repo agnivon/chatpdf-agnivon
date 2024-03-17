@@ -1,5 +1,6 @@
 import { NeonQueryFunction, neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { drizzleSchemas } from "./schema";
 
 neonConfig.fetchConnectionCache = true;
 
@@ -12,4 +13,4 @@ const sql = neon(process.env.DATABASE_URL) as NeonQueryFunction<
   boolean
 >;
 
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema: drizzleSchemas });

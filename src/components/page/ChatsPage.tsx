@@ -7,7 +7,7 @@ import {
   ArrowLeftCircleIcon,
   Loader2Icon,
 } from "lucide-react";
-import ChatSidebar from "../feature/ChatSidebar";
+import ChatSidebar from "../feature/chat/ChatSidebar";
 import {
   ResizableHandle,
   ResizablePanel,

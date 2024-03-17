@@ -1,5 +1,4 @@
 import { ChatValidationSchema } from "@/app/api/chat/_validation";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import {
   AIMessage,
   BaseMessage,
@@ -15,9 +14,9 @@ import {
 import {
   RunnableLike,
   RunnablePassthrough,
-  RunnableSequence
+  RunnableSequence,
 } from "@langchain/core/runnables";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { Document } from "langchain/document";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
@@ -26,27 +25,31 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { formatDocumentsAsString } from "langchain/util/document";
 import md5 from "md5";
 import { z } from "zod";
-import {
-  SYSTEM_TEMPLATE,
-  contextualizeQPrompt,
-  qaPrompt
-} from "./prompts";
+import { SYSTEM_TEMPLATE, contextualizeQPrompt, qaPrompt } from "./prompts";
+import { CHUNK_OVERLAP, CHUNK_SIZE, openAICmConfig, openAIEmConfig } from "./config";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error(`OPENAI_API_KEY not defined`);
 }
 
-export const hfEM = new HuggingFaceTransformersEmbeddings({
-  modelName: "Xenova/all-MiniLM-L6-v2",
-});
 
-export const openAICM = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
-  temperature: 0,
-  streaming: true,
-});
+// export const hfEM = new HuggingFaceTransformersEmbeddings({
+//   modelName: "Xenova/all-MiniLM-L6-v2",
+// });
 
-// cont openAIEM = new OpenAIEmbeddings
+
+export const openAICm = new ChatOpenAI(openAICmConfig);
+
+export function getOpenAICm(openAIApiKey?: string) {
+  return new ChatOpenAI({ ...openAICmConfig, openAIApiKey });
+}
+
+
+export const openAIEm = new OpenAIEmbeddings(openAIEmConfig);
+
+export function getOpenAIEm(openAIApiKey?: string) {
+  return new OpenAIEmbeddings({ ...openAIEmConfig, openAIApiKey });
+}
 
 export async function loadDocuments(blobs: Blob[]) {
   const docs = (
@@ -64,8 +67,8 @@ export async function loadDocuments(blobs: Blob[]) {
 
 export async function splitDocuments(docs: Document[]) {
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
+    chunkSize: CHUNK_SIZE,
+    chunkOverlap: CHUNK_OVERLAP,
   });
   const splitDocs = await splitter.splitDocuments(docs);
   return splitDocs;
@@ -74,7 +77,9 @@ export async function splitDocuments(docs: Document[]) {
 export async function getDocumentEmbeddings(docs: Document[]) {
   return await Promise.all(
     docs.map(async (doc) => {
-      const embeddings = (await hfEM.embedDocuments([doc.pageContent])).flat();
+      const embeddings = (
+        await openAIEm.embedDocuments([doc.pageContent])
+      ).flat();
       const hash = md5(doc.pageContent);
       return {
         id: hash,
@@ -88,11 +93,11 @@ export async function getDocumentEmbeddings(docs: Document[]) {
 }
 
 export async function getTextEmbedding(text: string) {
-  return hfEM.embedDocuments([text]);
+  return openAIEm.embedDocuments([text]);
 }
 
 const contextualizeQChain = contextualizeQPrompt
-  .pipe(openAICM as any)
+  .pipe(openAICm as any)
   .pipe(new StringOutputParser());
 
 export function convertIntoLangchainMessages(
@@ -109,7 +114,8 @@ export function convertIntoLangchainMessages(
 
 export async function getContextualizedQRAGChain(
   retriever: RunnableLike<string, Document<Record<string, any>>[]>,
-  callbacks?: (typeof openAICM)["callbacks"]
+  callbacks?: (typeof openAICm)["callbacks"],
+  openAIApiKey?: string
 ) {
   const ragChain = RunnableSequence.from([
     RunnablePassthrough.assign({
@@ -119,7 +125,7 @@ export async function getContextualizedQRAGChain(
       },
     }),
     qaPrompt,
-    openAICM.bind({
+    getOpenAICm(openAIApiKey).bind({
       callbacks,
     }) as any,
   ]);
@@ -129,7 +135,7 @@ export async function getContextualizedQRAGChain(
 export async function _getRAGChain() {
   const prompt = await pull<ChatPromptTemplate>("rlm/rag-prompt");
   const ragChain = await createStuffDocumentsChain({
-    llm: openAICM as any,
+    llm: openAICm as any,
     prompt,
     outputParser: new StringOutputParser(),
   });
@@ -142,10 +148,11 @@ const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
 ]);
 
 export async function getRAGChain(
-  callbacks?: (typeof openAICM)["callbacks"]
+  callbacks?: (typeof openAICm)["callbacks"],
+  openAIApiKey?: string
 ) {
   const documentChain = await createStuffDocumentsChain({
-    llm: openAICM.bind({
+    llm: getOpenAICm(openAIApiKey).bind({
       callbacks,
     }) as any,
     prompt: questionAnsweringPrompt,

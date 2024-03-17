@@ -65,7 +65,7 @@ export default function DocumentViewer(props: DocumentViewerProps) {
             </SelectContent>
           </Select>
         </div>
-        <div className="w-5/6 h-5/6 flex-grow rounded-lg overflow-hidden">
+        <div className="w-[90%] h-5/6 flex-grow rounded-lg overflow-hidden">
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
             <Viewer
               fileUrl={selectedDocumentUrl}

@@ -5,15 +5,19 @@ import { useChat } from "ai/react";
 import {
   AlertOctagonIcon,
   ArrowUpIcon,
+  KeyRoundIcon,
   Loader2Icon,
   StopCircleIcon,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
-import MessageList from "./MessageList";
-import RenderIf from "../global/RenderIf";
+import { Button } from "../../ui/button";
+import { Textarea } from "../../ui/textarea";
+import ChatMessageList from "./ChatMessageList";
+import RenderIf from "../../global/RenderIf";
 import useGetChat from "@/hooks/data/useGetChat";
 import { Chat } from "@/types";
+import useVercelChat from "@/hooks/chat/useVercelChat";
+import ChatMessageSkeleton from "./ChatMessageSkeleton";
+import { useOpenAIApiKeyDialog } from "@/store";
 
 export default function ChatComponent({
   chatId,
@@ -31,24 +35,7 @@ export default function ChatComponent({
     !!chatId && currentChat?.status === "live"
   );
 
-  /* const queryClient = useQueryClient();
-
-  const handleOnFinish = (message: Message) => {
-    if (chatId) {
-      queryClient.setQueryData(
-        ["messages", chatId],
-        (data: ChatMessage[] | undefined) => {
-          if (data) {
-            return produce(data, (draft) => {
-              draft.push(message as unknown as ChatMessage);
-            });
-          } else {
-            return [message as unknown as ChatMessage];
-          }
-        }
-      );
-    }
-  }; */
+  const { setShowOpenAIApiKeyDialog } = useOpenAIApiKeyDialog();
 
   const {
     input,
@@ -56,15 +43,8 @@ export default function ChatComponent({
     handleSubmit,
     messages,
     stop,
-    isLoading: completionIsLoading,
-  } = useChat({
-    api: "/api/chat",
-    body: {
-      chatId,
-    },
-    initialMessages: messageQuery.data || [],
-    //onFinish: handleOnFinish,
-  });
+    isLoading: responseIsLoading,
+  } = useVercelChat(chatId, false, messageQuery?.data);
 
   return (
     <div className="relative h-screen flex flex-col">
@@ -84,42 +64,56 @@ export default function ChatComponent({
           </RenderIf>
           <RenderIf isTrue={chatQuery.data?.status === "live"}>
             <RenderIf isTrue={messageQuery.isFetching}>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+              {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
                 <Loader2Icon className="animate-spin h-4 w-4 mr-1" />
                 <span>Loading messages...</span>
+              </div> */}
+              <div className="p-4 pb-0 flex-1">
+                <ChatMessageSkeleton count={8} />
               </div>
             </RenderIf>
             <RenderIf
               isTrue={!messageQuery.isFetching && messageQuery.isSuccess}
             >
-              <div className="p-4 pb-0 flex-1 overflow-auto relative ">
-                <MessageList messages={messages} />
+              <div className="p-4 pb-0 flex-1 overflow-auto relative">
+                <ChatMessageList messages={messages} />
               </div>
               <div className="pt-1 pb-4 px-4">
-                <div className="mb-1.5 ml-1 flex items-center">
-                  <span className="relative inline-flex h-2.5 w-2.5 mr-2">
-                    <span
-                      className={cn(
-                        "absolute inline-flex h-full w-full rounded-full opacity-75",
-                        {
-                          "animate-ping bg-accent-foreground":
-                            completionIsLoading,
-                          "bg-primary-foreground": !completionIsLoading,
-                        }
-                      )}
-                    ></span>
-                    <span
-                      className={cn(
-                        "relative inline-flex rounded-full h-2.5 w-2.5 ",
-                        !completionIsLoading
-                          ? "bg-primary-foreground"
-                          : "bg-accent-foreground"
-                      )}
-                    ></span>
-                  </span>
-                  <span className="text-sm">
-                    {completionIsLoading ? "Generating" : "Ready"}
-                  </span>
+                <div className="mb-1.5 ml-1 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="relative inline-flex h-2.5 w-2.5 mr-2">
+                      <span
+                        className={cn(
+                          "absolute inline-flex h-full w-full rounded-full opacity-75",
+                          {
+                            "animate-ping bg-accent-foreground":
+                              responseIsLoading,
+                            "bg-primary-foreground": !responseIsLoading,
+                          }
+                        )}
+                      ></span>
+                      <span
+                        className={cn(
+                          "relative inline-flex rounded-full h-2.5 w-2.5 ",
+                          !responseIsLoading
+                            ? "bg-primary-foreground"
+                            : "bg-accent-foreground"
+                        )}
+                      ></span>
+                    </span>
+                    <span className="text-sm">
+                      {responseIsLoading ? "Generating" : "Ready"}
+                    </span>
+                  </div>
+                  <div
+                    className="flex items-center text-sm group hover:cursor-pointer"
+                    onClick={() => setShowOpenAIApiKeyDialog(true)}
+                  >
+                    <KeyRoundIcon className="h-4 w-4 rotate-45 mr-1" />
+                    <span className="group-hover:underline">
+                      Change API Key
+                    </span>
+                  </div>
                 </div>
                 <form className="relative" onSubmit={handleSubmit}>
                   <Textarea
@@ -130,7 +124,7 @@ export default function ChatComponent({
                     placeholder="Ask any question"
                   />
                   <div className="absolute inset-y-0 right-0 flex flex-col justify-end py-3 pr-3">
-                    {completionIsLoading ? (
+                    {responseIsLoading ? (
                       <Button
                         className="h-8 w-8"
                         variant={"secondary"}

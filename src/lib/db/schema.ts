@@ -4,7 +4,7 @@ import {
   text,
   timestamp,
   uuid,
-  varchar
+  varchar,
 } from "drizzle-orm/pg-core";
 
 export const ChatStatusEnum = pgEnum("chat_status_enum", [
@@ -12,7 +12,11 @@ export const ChatStatusEnum = pgEnum("chat_status_enum", [
   "live",
   "failed",
 ]);
-export const UserSystemEnum = pgEnum("user_system_enum", ["system", "user", "assistant"]);
+export const UserSystemEnum = pgEnum("user_system_enum", [
+  "system",
+  "user",
+  "assistant",
+]);
 
 export const chat = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -42,3 +46,9 @@ export const chatMessage = pgTable("messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   role: UserSystemEnum("role").notNull().default("system"),
 });
+
+export const drizzleSchemas = {
+  chat,
+  chatDocument,
+  chatMessage,
+};

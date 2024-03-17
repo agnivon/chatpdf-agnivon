@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
   try {
-    const files = CreateChatValidationSchema.parse(await request.json());
+    const files = CreateChatValidationSchema.parse(await request.json()).files;
 
     const { chatId } = await axios
       .post<{ chatId: string }>(
