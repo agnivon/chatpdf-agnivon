@@ -1,7 +1,10 @@
 "use client";
+import useVercelChat from "@/hooks/chat/useVercelChat";
+import useGetChat from "@/hooks/data/useGetChat";
 import useGetMessages from "@/hooks/data/useGetMessages";
 import { cn } from "@/lib/utils";
-import { useChat } from "ai/react";
+import { useOpenAIApiKey, useOpenAIApiKeyDialog } from "@/store";
+import { Chat } from "@/types";
 import {
   AlertOctagonIcon,
   ArrowUpIcon,
@@ -9,15 +12,11 @@ import {
   Loader2Icon,
   StopCircleIcon,
 } from "lucide-react";
+import RenderIf from "../../global/RenderIf";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import ChatMessageList from "./ChatMessageList";
-import RenderIf from "../../global/RenderIf";
-import useGetChat from "@/hooks/data/useGetChat";
-import { Chat } from "@/types";
-import useVercelChat from "@/hooks/chat/useVercelChat";
 import ChatMessageSkeleton from "./ChatMessageSkeleton";
-import { useOpenAIApiKeyDialog } from "@/store";
 
 export default function ChatComponent({
   chatId,
@@ -35,6 +34,7 @@ export default function ChatComponent({
     !!chatId && currentChat?.status === "live"
   );
 
+  const openAIApiKey = useOpenAIApiKey();
   const { setShowOpenAIApiKeyDialog } = useOpenAIApiKeyDialog();
 
   const {
@@ -105,15 +105,17 @@ export default function ChatComponent({
                       {responseIsLoading ? "Generating" : "Ready"}
                     </span>
                   </div>
-                  <div
-                    className="flex items-center text-sm group hover:cursor-pointer"
-                    onClick={() => setShowOpenAIApiKeyDialog(true)}
-                  >
-                    <KeyRoundIcon className="h-4 w-4 rotate-45 mr-1" />
-                    <span className="group-hover:underline">
-                      Change API Key
-                    </span>
-                  </div>
+                  {openAIApiKey && (
+                    <div
+                      className="flex items-center text-sm group hover:cursor-pointer"
+                      onClick={() => setShowOpenAIApiKeyDialog(true)}
+                    >
+                      <KeyRoundIcon className="h-4 w-4 rotate-45 mr-1" />
+                      <span className="group-hover:underline">
+                        Change API Key
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <form className="relative" onSubmit={handleSubmit}>
                   <Textarea

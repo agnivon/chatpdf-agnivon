@@ -109,9 +109,9 @@ export async function POST(request: NextRequest) {
     );
 
     const retriever = vectorStore.asRetriever({
-      searchType: "mmr",
-      searchKwargs: { fetchK: 10 },
-      k: 5,
+      searchType: "similarity",
+      //searchKwargs: { fetchK: 50 },
+      k: 10,
     }) as RunnableLike<string, Document<Record<string, any>>[]>;
 
     // const context = await vectorStore.maxMarginalRelevanceSearch(query, {

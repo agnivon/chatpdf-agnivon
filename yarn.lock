@@ -5120,15 +5120,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/axios@npm:^0.14.0":
-  version: 0.14.0
-  resolution: "@types/axios@npm:0.14.0"
-  dependencies:
-    axios: "npm:*"
-  checksum: 10c0/f315a485b8069038a1bd8d7c064b84dc6f726dfaab4ef1a6602b0bd38bbf32a6903dc9282293caafefac38da5a0e938fa6623ce8dd173adb41864dac6cb83716
-  languageName: node
-  linkType: hard
-
 "@types/body-parser@npm:*":
   version: 1.19.5
   resolution: "@types/body-parser@npm:1.19.5"
@@ -6020,7 +6011,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:*, axios@npm:^1.6.7":
+"axios@npm:^1.6.7":
   version: 1.6.7
   resolution: "axios@npm:1.6.7"
   dependencies:
@@ -6457,7 +6448,6 @@ __metadata:
     "@react-pdf-viewer/core": "npm:3.12.0"
     "@react-pdf-viewer/default-layout": "npm:^3.12.0"
     "@tanstack/react-query": "npm:^5.24.1"
-    "@types/axios": "npm:^0.14.0"
     "@types/md5": "npm:^2.3.5"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
