@@ -118,7 +118,11 @@ export async function POST(request: NextRequest) {
         })
     ).map(({ id }) => id);
 
-    pipeline(fileKeys, newChatId);
+    if (process.env.NODE_ENV === "production") {
+      await pipeline(fileKeys, newChatId);
+    } else {
+      pipeline(fileKeys, newChatId);
+    }
 
     return NextResponse.json({
       chatId: newChatId,
