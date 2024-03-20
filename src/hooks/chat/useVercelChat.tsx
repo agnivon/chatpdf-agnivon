@@ -10,7 +10,7 @@ export default function useVercelChat(
   const openAIApiKey = useOpenAIApiKey();
 
   const chat = useChat({
-    api: "/api/chat",
+    api: "/api//edge/chat",
     body: {
       chatId,
       regenerate,

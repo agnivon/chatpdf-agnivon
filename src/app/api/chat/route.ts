@@ -13,6 +13,7 @@ import { ChatValidationSchema } from "./_validation";
 
 import { RunnableLike } from "@langchain/core/runnables";
 import { Document } from "langchain/document";
+import { onCompletion, onStart } from "./_utils";
 
 //export const runtime = "edge";
 
@@ -29,7 +30,7 @@ import { Document } from "langchain/document";
 //     await queryVectors(
 //       queryEmbeddings,
 //       process.env.PINECONE_INDEX!,
-//       chatId.toString(),
+//       chatId,
 //       10
 //     )
 //   ).matches; /* .filter((match) => (match?.score || 0) > 0.7); */
@@ -64,42 +65,8 @@ export async function POST(request: NextRequest) {
     // });
 
     const { stream, handlers } = LangChainStream({
-      onStart: () => {
-        if (!regenerate) {
-          db.insert(chatMessage)
-            .values({
-              chatId,
-              content: query,
-              role: "user",
-            })
-            .execute();
-        }
-      },
-      onFinal: async (completion) => {
-        if (regenerate) {
-          const result = await db.query.chatMessage.findFirst({
-            where: eq(chatMessage.chatId, chatId),
-            columns: {
-              id: true,
-            },
-            orderBy: (messages, { desc }) => [desc(messages.createdAt)],
-          });
-          if (result) {
-            db.update(chatMessage)
-              .set({ content: completion })
-              .where(eq(chatMessage.id, result.id))
-              .execute();
-          }
-        } else {
-          db.insert(chatMessage)
-            .values({
-              chatId,
-              content: completion,
-              role: "assistant",
-            })
-            .execute();
-        }
-      },
+      onStart: onStart(query, regenerate, chatId),
+      onCompletion: onCompletion(regenerate, chatId),
     });
 
     const vectorStore = await getPineconeVectorStore(

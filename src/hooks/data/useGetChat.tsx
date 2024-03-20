@@ -12,7 +12,7 @@ export default function useGetChat(
     queryKey: ["chat", chatId],
     queryFn: () =>
       axios
-        .get<Chat>(`/api/chat/${chatId}`)
+        .get<Chat>(`/api/edge/chat/${chatId}`)
         .then((res) => res.data)
         .then((responseData) => {
           queryClient.setQueryData(

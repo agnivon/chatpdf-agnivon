@@ -35,20 +35,15 @@ export const CreateChatValidationSchema = z
     openAIApiKey: true,
   });
 
+export const SUPPORTED_ROLES = ["user", "system", "assistant"] as const;
+
 export const ChatValidationSchema = z
   .object({
     messages: z
       .array(
         z
           .object({
-            role: z.enum([
-              //"function",
-              //"data",
-              "user",
-              "system",
-              //"tool",
-              "assistant",
-            ]),
+            role: z.enum(SUPPORTED_ROLES),
             content: z.string().max(5000),
           })
           .required({

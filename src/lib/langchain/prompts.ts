@@ -1,7 +1,10 @@
+import { SUPPORTED_ROLES } from "@/app/api/chat/_validation";
+import { ChatMessage } from "@/types";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { Message } from "ai";
 
 // const prompt = {
 //     role: "system" as const,
@@ -52,3 +55,30 @@ export const qaPrompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("chat_history"),
   ["human", "{question}"],
 ]);
+
+export const getContextualizeQPromptForEdge = (
+  chatHistory: Pick<ChatMessage, "role" | "content">[],
+  question: string
+): Pick<ChatMessage, "role" | "content">[] => {
+  return [
+    { role: "system", content: contextualizeQSystemPrompt },
+    ...chatHistory,
+    { role: "user", content: "question" },
+  ];
+};
+
+export const getQASystemPromptForEdge = (context: string) => {
+  return qaSystemPrompt.replace(/\{context\}/g, context);
+};
+
+export const getQAPromptForEdge = (
+  chatHistory: Pick<ChatMessage, "role" | "content">[],
+  context: string,
+  question: string
+): Pick<ChatMessage, "role" | "content">[] => {
+  return [
+    { role: "system", content: getQASystemPromptForEdge(context) },
+    ...chatHistory,
+    { role: "user", content: question },
+  ];
+};

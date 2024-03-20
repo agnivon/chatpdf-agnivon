@@ -193,7 +193,11 @@ function List({
                     : "always"
                   : "hover"
               }
-              showRegenerate={idx === messages.length - 1 && !responseIsLoading}
+              showRegenerate={
+                idx === messages.length - 1 &&
+                !responseIsLoading &&
+                message.role === "assistant"
+              }
               reload={reload}
             />
           );

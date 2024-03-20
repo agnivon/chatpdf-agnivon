@@ -2,13 +2,17 @@ import { db } from "@/lib/db";
 import { chat, chatDocument } from "@/lib/db/schema";
 import { ChatDocument } from "@/types";
 import { auth } from "@clerk/nextjs";
-import { eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
 async function fetchChats(userId: string) {
-  return db.select().from(chat).where(eq(chat.userId, userId));
+  return db
+    .select()
+    .from(chat)
+    .where(eq(chat.userId, userId))
+    .orderBy(desc(chat.createdAt));
 }
 
 async function fetchDocuments(chatIds: string[]) {
