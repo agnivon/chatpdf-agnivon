@@ -11,6 +11,7 @@ import OpenAI from "openai";
 import { ZodError } from "zod";
 import { onCompletion, onStart } from "../../chat/_utils";
 import { ChatValidationSchema } from "../../chat/_validation";
+import { isProdEnv } from "@/lib/utils";
 import { MAX_CONTEXT_CHAT_HISTORY } from "@/constants/validation.constants";
 
 export const runtime = "edge";
@@ -25,21 +26,25 @@ async function pipeline(
     apiKey: openAIApiKey,
   });
 
-  const contextualizeQPrompt = getContextualizeQPromptForEdge(
-    chatHistory.slice(-MAX_CONTEXT_CHAT_HISTORY),
-    query
-  );
+  let contextualizedQuery;
 
-  const response1 = await client.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: contextualizeQPrompt,
-  });
-
-  const contextualizedQuery = response1.choices[0].message.content || query;
+  if (!isProdEnv()) {
+    const contextualizeQPrompt = getContextualizeQPromptForEdge(
+      chatHistory.slice(-MAX_CONTEXT_CHAT_HISTORY),
+      query
+    );
+    const response1 = await client.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: contextualizeQPrompt,
+    });
+    const contextualizedQuery = response1.choices[0].message.content || query;
+  } else {
+    contextualizedQuery = query;
+  }
 
   const queryEmbeddings = (
     await client.embeddings.create({
-      input: [contextualizedQuery],
+      input: [query],
       model: openAIEmConfig.modelName,
       dimensions: openAIEmConfig.dimensions,
     })
@@ -61,11 +66,7 @@ async function pipeline(
     )
     .join("\n\n");
 
-  const qaPrompt = getQAPromptForEdge(
-    chatHistory,
-    context,
-    contextualizedQuery
-  );
+  const qaPrompt = getQAPromptForEdge(chatHistory, context, query);
 
   const response2 = await client.chat.completions.create({
     model: "gpt-3.5-turbo",

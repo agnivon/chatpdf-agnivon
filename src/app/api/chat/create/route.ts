@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { CreateChatValidationSchema } from "../_validation";
+import { isProdEnv } from "@/lib/utils";
 
 //export const runtime = "edge";
 
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
         })
     ).map(({ id }) => id);
 
-    if (process.env.NODE_ENV === "production") {
+    if (isProdEnv()) {
       await pipeline(fileKeys, newChatId);
     } else {
       pipeline(fileKeys, newChatId);

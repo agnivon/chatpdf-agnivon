@@ -210,7 +210,7 @@ function List({
             user={user}
             fallback={fallback}
             optionsShowMode="always"
-            showRegenerate
+            showRegenerate={messages[-1]?.role === "user"}
             reload={reload}
             color="error"
           />

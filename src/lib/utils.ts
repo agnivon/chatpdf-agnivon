@@ -70,3 +70,7 @@ export function range(start: number, end: number) {
 export function isDevEnv() {
   return process.env.NODE_ENV === "development";
 }
+
+export function isProdEnv() {
+  return process.env.NODE_ENV === "production";
+}
