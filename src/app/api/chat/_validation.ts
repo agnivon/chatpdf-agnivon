@@ -7,8 +7,8 @@ import {
 export const OpenAIApiKeySchema = z
   .string()
   .trim()
-  .regex(/^sk-[A-Za-z0-9]{48}$/, "Invalid OpenAI API Key")
-  .max(100, "Invalid OpenAI API Key");
+  // .regex(/^sk-[A-Za-z0-9]{48}$/, "Invalid OpenAI API Key")
+  .max(500, "Invalid OpenAI API Key");
 
 export const CreateChatValidationSchema = z
   .object({
