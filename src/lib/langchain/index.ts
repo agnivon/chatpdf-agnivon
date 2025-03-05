@@ -26,24 +26,22 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import md5 from "md5";
 import { z } from "zod";
 import { SYSTEM_TEMPLATE, contextualizeQPrompt, qaPrompt } from "./prompts";
-import { CHUNK_OVERLAP, CHUNK_SIZE, openAICmConfig, openAIEmConfig } from "./config";
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error(`OPENAI_API_KEY not defined`);
-}
-
+import {
+  CHUNK_OVERLAP,
+  CHUNK_SIZE,
+  openAICmConfig,
+  openAIEmConfig,
+} from "./config";
 
 // export const hfEM = new HuggingFaceTransformersEmbeddings({
 //   modelName: "Xenova/all-MiniLM-L6-v2",
 // });
-
 
 export const openAICm = new ChatOpenAI(openAICmConfig);
 
 export function getOpenAICm(openAIApiKey?: string) {
   return new ChatOpenAI({ ...openAICmConfig, openAIApiKey });
 }
-
 
 export const openAIEm = new OpenAIEmbeddings(openAIEmConfig);
 

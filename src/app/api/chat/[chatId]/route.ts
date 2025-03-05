@@ -1,3 +1,4 @@
+import { PINECONE_INDEX } from "@/config/env.config";
 import { db } from "@/lib/db";
 import { chat, chatDocument } from "@/lib/db/schema";
 import { deleteAllNamespaceVectors } from "@/lib/pinecone/edge";
@@ -70,7 +71,7 @@ export async function DELETE(
 
     console.log(`Deleted chat: ${chatId}`);
 
-    deleteAllNamespaceVectors(process.env.PINECONE_INDEX!, chatId.toString());
+    deleteAllNamespaceVectors(PINECONE_INDEX, chatId.toString());
 
     deleteS3Files(documentFileKeys);
 

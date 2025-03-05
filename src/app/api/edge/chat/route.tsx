@@ -1,4 +1,4 @@
-import { openAIEmConfig } from "@/lib/langchain/config";
+import { openAICmConfig, openAIEmConfig } from "@/lib/langchain/config";
 import {
   getContextualizeQPromptForEdge,
   getQAPromptForEdge,
@@ -13,6 +13,7 @@ import { onCompletion, onStart } from "../../chat/_utils";
 import { ChatValidationSchema } from "../../chat/_validation";
 import { isProdEnv } from "@/lib/utils";
 import { MAX_CONTEXT_CHAT_HISTORY } from "@/constants/validation.constants";
+import { PINECONE_INDEX } from "@/config/env.config";
 
 export const runtime = "edge";
 
@@ -34,10 +35,10 @@ async function pipeline(
       query
     );
     const response1 = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: openAICmConfig["modelName"],
       messages: contextualizeQPrompt,
     });
-    const contextualizedQuery = response1.choices[0].message.content || query;
+    contextualizedQuery = response1.choices[0].message.content || query;
   } else {
     contextualizedQuery = query;
   }
@@ -50,13 +51,13 @@ async function pipeline(
     })
   ).data[0].embedding;
 
-  //console.log("Query Embeddings", queryEmbeddings);
+  // console.log("Query Embeddings", queryEmbeddings);
 
   const matches = (
-    await queryVectors(queryEmbeddings, process.env.PINECONE_INDEX!, chatId, 10)
+    await queryVectors(queryEmbeddings, PINECONE_INDEX!, chatId, 10)
   ).matches; /* .filter((match) => (match?.score || 0) > 0.7); */
 
-  //console.log("Matches", matches);
+  // console.log("Matches", matches);
 
   const context = matches
     .map((match) =>
@@ -69,7 +70,7 @@ async function pipeline(
   const qaPrompt = getQAPromptForEdge(chatHistory, context, query);
 
   const response2 = await client.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: openAICmConfig["modelName"],
     stream: true,
     messages: qaPrompt,
   });

@@ -1,3 +1,4 @@
+import { S3_BUCKET_NAME, S3_BUCKET_REGION } from "@/config/env.config";
 import { S3FileUploadResponse } from "@/types";
 import {
   DeleteObjectsCommand,
@@ -7,22 +8,9 @@ import {
 } from "@aws-sdk/client-s3";
 import { fromEnv } from "@aws-sdk/credential-providers";
 
-if (!process.env.AWS_ACCESS_KEY_ID) {
-  throw new Error(`AWS_ACCESS_KEY_ID not defined`);
-}
-if (!process.env.AWS_SECRET_ACCESS_KEY) {
-  throw new Error(`AWS_SECRET_ACCESS_KEY not defined`);
-}
-if (!process.env.S3_BUCKET_NAME) {
-  throw new Error(`S3_BUCKET_NAME not defined`);
-}
-if (!process.env.S3_BUCKET_REGION) {
-  throw new Error(`S3_BUCKET_REGION not defined`);
-}
-
 const s3 = new S3Client({
-  region: process.env.S3_BUCKET_REGION,
-  credentials: fromEnv()
+  region: S3_BUCKET_REGION,
+  credentials: fromEnv(),
 });
 
 export async function uploadFileToS3(
@@ -34,7 +22,7 @@ export async function uploadFileToS3(
   )}`;
 
   const command = new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME!,
+    Bucket: S3_BUCKET_NAME,
     Key: fileKey,
     Body: Buffer.from(
       await new Blob([file], { type: file.type }).arrayBuffer()
@@ -58,7 +46,7 @@ export async function downloadFilesFromS3(fileKeys: string[]) {
   return await Promise.all(
     fileKeys.map(async (fileKey) => {
       const command = new GetObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: S3_BUCKET_NAME,
         Key: fileKey,
       });
       const response = await s3.send(command);
@@ -71,7 +59,7 @@ export async function downloadFilesFromS3(fileKeys: string[]) {
 
 export async function deleteS3Files(fileKeys: string[]) {
   const command = new DeleteObjectsCommand({
-    Bucket: process.env.S3_BUCKET_NAME!,
+    Bucket: S3_BUCKET_NAME,
     Delete: {
       Objects: fileKeys.map((key) => ({ Key: key })),
     },
@@ -83,6 +71,6 @@ export async function deleteS3Files(fileKeys: string[]) {
 }
 
 export function getS3Url(fileKey: string) {
-  const url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_BUCKET_REGION}.amazonaws.com/${fileKey}`;
+  const url = `https://${S3_BUCKET_NAME}.s3.${S3_BUCKET_REGION}.amazonaws.com/${fileKey}`;
   return url;
 }

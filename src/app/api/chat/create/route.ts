@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { CreateChatValidationSchema } from "../_validation";
-import { isProdEnv } from "@/lib/utils";
+import { PINECONE_INDEX } from "@/config/env.config";
 
 //export const runtime = "edge";
 
@@ -28,23 +28,27 @@ async function pipeline(
 
     const docs = await loadDocuments(fileBlobs);
 
-    // console.log(docs);
+    // console.log("Docs", docs);
 
     console.log(`Chat ${chatId}: Splitting documents`);
 
     const splitDocs = await splitDocuments(docs);
 
+    // console.log("Split docs", splitDocs);
+
     const vectorStore = await getPineconeVectorStore(
-      process.env.PINECONE_INDEX!,
+      PINECONE_INDEX,
       chatId,
       openAIaPIKey
     );
 
-    //console.log(`Chat ${chatId}: Getting document embeddings`);
+    // console.log(`Chat ${chatId}: Getting document embeddings`);
 
-    //const vectors = await getDocumentEmbeddings(splitDocs);
+    // const vectors = await getDocumentEmbeddings(splitDocs);
 
-    //console.log(`Chat ${chatId}: Upserting vectors into Pinecone`);
+    // console.log("Vectors", vectors);
+
+    // console.log(`Chat ${chatId}: Upserting vectors into Pinecone`);
 
     console.log(`Chat ${chatId}: Adding documents to vector store`);
 
@@ -119,11 +123,7 @@ export async function POST(request: NextRequest) {
         })
     ).map(({ id }) => id);
 
-    if (isProdEnv()) {
-      await pipeline(fileKeys, newChatId);
-    } else {
-      pipeline(fileKeys, newChatId);
-    }
+    await pipeline(fileKeys, newChatId);
 
     return NextResponse.json({
       chatId: newChatId,

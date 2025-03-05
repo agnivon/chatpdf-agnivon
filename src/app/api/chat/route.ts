@@ -14,6 +14,7 @@ import { ChatValidationSchema } from "./_validation";
 import { RunnableLike } from "@langchain/core/runnables";
 import { Document } from "langchain/document";
 import { onCompletion, onStart } from "./_utils";
+import { PINECONE_INDEX } from "@/config/env.config";
 
 //export const runtime = "edge";
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
     const vectorStore = await getPineconeVectorStore(
-      process.env.PINECONE_INDEX!,
+      PINECONE_INDEX,
       chatId,
       openAIApiKey
     );

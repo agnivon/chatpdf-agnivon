@@ -1,18 +1,11 @@
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
 import { chunkArray } from "../utils";
-
-if (!process.env.PINECONE_API_KEY) {
-    throw new Error(`PINECONE_API_KEY not defined`);
-  }
-  
-  if (!process.env.PINECONE_INDEX) {
-    throw new Error(`PINECONE_INDEX not defined`);
-  }
+import { PINECONE_API_KEY } from "@/config/env.config";
 
 const UPSERT_CHUNK_SIZE = 1000;
 
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY,
+  apiKey: PINECONE_API_KEY,
 });
 
 export async function queryVectors(
