@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { chat } from "@/lib/db/schema";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,10 +8,11 @@ export const runtime = "edge";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { chatId: string } }
+  props: { params: Promise<{ chatId: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 

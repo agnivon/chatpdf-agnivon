@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { CreateChatValidationSchema } from "../../_validation";
 import { ZodError } from "zod";
@@ -6,7 +6,7 @@ import axios, { AxiosError } from "axios";
 import { NEXT_PUBLIC_RAG_SERVER_HOST } from "@/config/env.config";
 
 export async function POST(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }

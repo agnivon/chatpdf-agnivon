@@ -1,5 +1,5 @@
 import { CreateChatValidationSchema } from "@/app/api/chat/_validation";
-import { ROUTES } from "@/constants/route.constans";
+import { ROUTES } from "@/constants/route.constants";
 import { useOpenAIApiKey } from "@/store";
 import { CreateChatResponse } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
