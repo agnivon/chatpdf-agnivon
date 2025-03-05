@@ -1,6 +1,6 @@
 "use client";
 
-import { ROUTES } from "@/constants/route.constans";
+import { ROUTES } from "@/constants/route.constants";
 import useDeleteChatUtils from "@/hooks/chat/useDeleteChatUtils";
 import { cn } from "@/lib/utils";
 import { Chat, ChatsResponse } from "@/types";
@@ -57,7 +57,7 @@ export default function ChatSidebar(props: ChatSidebarProps) {
           {chats.length > 0 ? (
             chats.map((chat) => {
               const name =
-              chatDocuments[chat.id]?.map((doc) => doc.name).join(", ") ||
+                chatDocuments[chat.id]?.map((doc) => doc.name).join(", ") ||
                 "Deleted";
               return (
                 <div

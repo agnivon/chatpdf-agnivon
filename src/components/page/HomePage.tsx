@@ -1,10 +1,11 @@
-import { ROUTES } from "@/constants/route.constans";
-import { UserButton, auth } from "@clerk/nextjs";
+import { ROUTES } from "@/constants/route.constants";
+import { UserButton } from "@clerk/nextjs";
 import { ArrowRightIcon, LogInIcon } from "lucide-react";
 import Link from "next/link";
 import FileUpload from "../feature/FileUpload";
 import { Button } from "../ui/button";
 import ChangeKeyButton from "../feature/ChangeKeyButton";
+import { auth } from "@clerk/nextjs/server";
 
 export default async function HomePage() {
   const { userId } = await auth();

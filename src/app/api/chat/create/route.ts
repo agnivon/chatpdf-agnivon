@@ -3,7 +3,7 @@ import { chat, chatDocument } from "@/lib/db/schema";
 import { loadDocuments, splitDocuments } from "@/lib/langchain";
 import { getPineconeVectorStore } from "@/lib/pinecone";
 import { downloadFilesFromS3, getS3Url } from "@/lib/s3";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
@@ -82,7 +82,7 @@ async function pipeline(
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
