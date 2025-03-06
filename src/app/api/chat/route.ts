@@ -70,11 +70,9 @@ export async function POST(request: NextRequest) {
       onCompletion: onCompletion(regenerate, chatId),
     });
 
-    const vectorStore = await getPineconeVectorStore(
-      PINECONE_INDEX,
-      chatId,
-      openAIApiKey
-    );
+    const vectorStore = await getPineconeVectorStore(PINECONE_INDEX, chatId, {
+      openAIApiKey,
+    });
 
     const retriever = vectorStore.asRetriever({
       searchType: "similarity",
@@ -102,7 +100,7 @@ export async function POST(request: NextRequest) {
     const contextualizeQChain = await getContextualizedQRAGChain(
       retriever,
       [handlers],
-      openAIApiKey
+      { openAIApiKey }
     );
 
     contextualizeQChain.invoke({

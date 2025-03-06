@@ -15,7 +15,7 @@ import { PINECONE_INDEX } from "@/config/env.config";
 async function pipeline(
   fileKeys: string[],
   chatId: string,
-  openAIaPIKey?: string | undefined
+  openAIApiKey?: string | undefined
 ) {
   try {
     console.log(`Chat ${chatId}: Downloading files from S3`);
@@ -36,11 +36,9 @@ async function pipeline(
 
     // console.log("Split docs", splitDocs);
 
-    const vectorStore = await getPineconeVectorStore(
-      PINECONE_INDEX,
-      chatId,
-      openAIaPIKey
-    );
+    const vectorStore = await getPineconeVectorStore(PINECONE_INDEX, chatId, {
+      openAIApiKey,
+    });
 
     // console.log(`Chat ${chatId}: Getting document embeddings`);
 

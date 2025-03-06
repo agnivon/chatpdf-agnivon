@@ -16,7 +16,12 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import {
+  ChatOpenAI,
+  ChatOpenAICallOptions,
+  OpenAIEmbeddings,
+  OpenAIEmbeddingsParams,
+} from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { Document } from "langchain/document";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
@@ -39,14 +44,18 @@ import {
 
 export const openAICm = new ChatOpenAI(openAICmConfig);
 
-export function getOpenAICm(openAIApiKey?: string) {
-  return new ChatOpenAI({ ...openAICmConfig, openAIApiKey });
+export type OpeAICmConfig = ConstructorParameters<typeof ChatOpenAI>[0];
+
+export type OpenAIEmConfig = ConstructorParameters<typeof OpenAIEmbeddings>[0];
+
+export function getOpenAICm(config?: OpeAICmConfig) {
+  return new ChatOpenAI({ ...openAICmConfig, ...config });
 }
 
 export const openAIEm = new OpenAIEmbeddings(openAIEmConfig);
 
-export function getOpenAIEm(openAIApiKey?: string) {
-  return new OpenAIEmbeddings({ ...openAIEmConfig, openAIApiKey });
+export function getOpenAIEm(config?: OpenAIEmConfig) {
+  return new OpenAIEmbeddings({ ...openAIEmConfig, ...config });
 }
 
 export async function loadDocuments(blobs: Blob[]) {
@@ -113,7 +122,7 @@ export function convertIntoLangchainMessages(
 export async function getContextualizedQRAGChain(
   retriever: RunnableLike<string, Document<Record<string, any>>[]>,
   callbacks?: (typeof openAICm)["callbacks"],
-  openAIApiKey?: string
+  config?: OpeAICmConfig
 ) {
   const ragChain = RunnableSequence.from([
     RunnablePassthrough.assign({
@@ -123,7 +132,7 @@ export async function getContextualizedQRAGChain(
       },
     }),
     qaPrompt,
-    getOpenAICm(openAIApiKey).bind({
+    getOpenAICm(config).bind({
       callbacks,
     }) as any,
   ]);
@@ -147,10 +156,10 @@ const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
 
 export async function getRAGChain(
   callbacks?: (typeof openAICm)["callbacks"],
-  openAIApiKey?: string
+  config?: OpeAICmConfig
 ) {
   const documentChain = await createStuffDocumentsChain({
-    llm: getOpenAICm(openAIApiKey).bind({
+    llm: getOpenAICm(config).bind({
       callbacks,
     }) as any,
     prompt: questionAnsweringPrompt,
