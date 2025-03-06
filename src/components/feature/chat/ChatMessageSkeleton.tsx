@@ -13,7 +13,7 @@ export default function ChatMessageSkeleton({ count }: Props) {
             <div className="w-fit shrink-0 flex flex-col">
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>
-            <div className="flex-grow">
+            <div className="grow">
               <Skeleton className="h-5 w-28 mb-4" />
               <Skeleton className="h-8 w-full" />
             </div>
