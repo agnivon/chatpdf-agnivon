@@ -18,7 +18,15 @@ export default function useCreateChat(ragServer: boolean = false) {
   const mutation = useMutation({
     mutationFn: (files: z.infer<typeof CreateChatValidationSchema>["files"]) =>
       axios
-        .post<CreateChatResponse>(url, { files, openAIApiKey })
+        .post<CreateChatResponse>(
+          url,
+          { files },
+          {
+            headers: {
+              "api-key": openAIApiKey,
+            },
+          }
+        )
         .then((res) => res.data),
     onSuccess: async ({ chatId }) => {
       await queryClient.invalidateQueries({ queryKey: ["chats"], exact: true });

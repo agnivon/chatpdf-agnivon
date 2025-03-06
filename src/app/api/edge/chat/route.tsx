@@ -80,8 +80,12 @@ async function pipeline(
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, chatId, regenerate, openAIApiKey } =
-      ChatValidationSchema.parse(await request.json());
+    const openAIApiKey = request.headers.get("api-key");
+    if (!openAIApiKey)
+      return new NextResponse("API Key required", { status: 400 });
+    const { messages, chatId, regenerate } = ChatValidationSchema.parse(
+      await request.json()
+    );
 
     const query = messages[messages.length - 1].content;
 

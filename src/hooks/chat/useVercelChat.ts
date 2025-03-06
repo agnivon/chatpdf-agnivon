@@ -11,10 +11,12 @@ export default function useVercelChat(
 
   const chat = useChat({
     api: "/api//edge/chat",
+    headers: {
+      "api-key": openAIApiKey,
+    },
     body: {
       chatId,
       regenerate,
-      openAIApiKey,
     },
     initialMessages: initialMessages || [],
     //onFinish: handleOnFinish,

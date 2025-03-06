@@ -15,7 +15,7 @@ import { PINECONE_INDEX } from "@/config/env.config";
 async function pipeline(
   fileKeys: string[],
   chatId: string,
-  openAIApiKey?: string | undefined
+  openAIApiKey: string
 ) {
   try {
     console.log(`Chat ${chatId}: Downloading files from S3`);
@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
+  const openAIApiKey = request.headers.get("api-key");
+  if (!openAIApiKey)
+    return new NextResponse("API Key required", { status: 400 });
   let newChatId: string = "";
   let newDocumentIds: string[] = [];
   try {
@@ -121,7 +124,7 @@ export async function POST(request: NextRequest) {
         })
     ).map(({ id }) => id);
 
-    await pipeline(fileKeys, newChatId);
+    await pipeline(fileKeys, newChatId, openAIApiKey);
 
     return NextResponse.json({
       chatId: newChatId,
