@@ -3,8 +3,8 @@ import { ROUTES } from "./constants/route.constants";
 
 const isPublicRoute = createRouteMatcher([
   ROUTES.HOME,
-  ROUTES.SIGN_IN,
-  ROUTES.SIGN_UP,
+  `${ROUTES.SIGN_IN}(.*)`,
+  `${ROUTES.SIGN_UP}(.*)`,
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
