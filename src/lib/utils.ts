@@ -1,3 +1,4 @@
+import { VERCEL_ENV } from "@/config/env.config";
 import {
   MAX_FILE_NAME_LENGTH,
   MAX_FILE_SIZE,
@@ -68,9 +69,9 @@ export function range(start: number, end: number) {
 }
 
 export function isDevEnv() {
-  return process.env.NODE_ENV === "development";
+  return VERCEL_ENV === "development";
 }
 
 export function isProdEnv() {
-  return process.env.NODE_ENV === "production";
+  return VERCEL_ENV === "production";
 }

@@ -12,6 +12,7 @@ import {
   ResizablePanelGroup,
 } from "../ui/resizable";
 import ChatContext from "@/context/ChatContext";
+import React from "react";
 
 type MainComponentProps = ChatsResponse & {
   chatId: string;
@@ -62,10 +63,12 @@ function MainComponent(props: MainComponentProps) {
   );
 }
 
-export default function ChatPage(props: { params: { chatId: string } }) {
+export default function ChatPage(props: {
+  params: Promise<{ chatId: string }>;
+}) {
   const { query: chatsQuery } = useGetChats();
 
-  const chatId = props.params.chatId;
+  const chatId = React.use(props.params).chatId;
 
   return (
     <ChatContext.Provider value={{ chatId }}>

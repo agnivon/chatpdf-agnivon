@@ -125,7 +125,7 @@ const MessageC = React.memo(function (
           </Avatar>
         )}
       </div>
-      <div className="flex-grow">
+      <div className="grow">
         <div className="flex mb-2">
           <div className="uppercase">{role}</div>
           <div

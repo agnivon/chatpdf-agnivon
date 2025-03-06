@@ -3,19 +3,19 @@ import { chat, chatDocument } from "@/lib/db/schema";
 import { loadDocuments, splitDocuments } from "@/lib/langchain";
 import { getPineconeVectorStore } from "@/lib/pinecone";
 import { downloadFilesFromS3, getS3Url } from "@/lib/s3";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { CreateChatValidationSchema } from "../_validation";
-import { isProdEnv } from "@/lib/utils";
+import { PINECONE_INDEX } from "@/config/env.config";
 
 //export const runtime = "edge";
 
 async function pipeline(
   fileKeys: string[],
   chatId: string,
-  openAIaPIKey?: string | undefined
+  openAIApiKey: string
 ) {
   try {
     console.log(`Chat ${chatId}: Downloading files from S3`);
@@ -28,23 +28,25 @@ async function pipeline(
 
     const docs = await loadDocuments(fileBlobs);
 
-    // console.log(docs);
+    // console.log("Docs", docs);
 
     console.log(`Chat ${chatId}: Splitting documents`);
 
     const splitDocs = await splitDocuments(docs);
 
-    const vectorStore = await getPineconeVectorStore(
-      process.env.PINECONE_INDEX!,
-      chatId,
-      openAIaPIKey
-    );
+    // console.log("Split docs", splitDocs);
 
-    //console.log(`Chat ${chatId}: Getting document embeddings`);
+    const vectorStore = await getPineconeVectorStore(PINECONE_INDEX, chatId, {
+      openAIApiKey,
+    });
 
-    //const vectors = await getDocumentEmbeddings(splitDocs);
+    // console.log(`Chat ${chatId}: Getting document embeddings`);
 
-    //console.log(`Chat ${chatId}: Upserting vectors into Pinecone`);
+    // const vectors = await getDocumentEmbeddings(splitDocs);
+
+    // console.log("Vectors", vectors);
+
+    // console.log(`Chat ${chatId}: Upserting vectors into Pinecone`);
 
     console.log(`Chat ${chatId}: Adding documents to vector store`);
 
@@ -78,10 +80,13 @@ async function pipeline(
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
+  const openAIApiKey = request.headers.get("api-key");
+  if (!openAIApiKey)
+    return new NextResponse("API Key required", { status: 400 });
   let newChatId: string = "";
   let newDocumentIds: string[] = [];
   try {
@@ -119,11 +124,7 @@ export async function POST(request: NextRequest) {
         })
     ).map(({ id }) => id);
 
-    if (isProdEnv()) {
-      await pipeline(fileKeys, newChatId);
-    } else {
-      pipeline(fileKeys, newChatId);
-    }
+    await pipeline(fileKeys, newChatId, openAIApiKey);
 
     return NextResponse.json({
       chatId: newChatId,

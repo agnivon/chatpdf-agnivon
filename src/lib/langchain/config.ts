@@ -2,7 +2,7 @@ export const CHUNK_SIZE = 1000;
 export const CHUNK_OVERLAP = 200;
 
 export const openAICmConfig = {
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-4o-mini",
   temperature: 0,
   streaming: true,
 } as const;

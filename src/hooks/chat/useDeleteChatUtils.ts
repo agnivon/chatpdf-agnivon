@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import useDeleteChat from "../data/useDeleteChat";
 import { toast } from "react-hot-toast";
-import { ROUTES } from "@/constants/route.constans";
+import { ROUTES } from "@/constants/route.constants";
 import React from "react";
 
 export default function useDeleteChatUtils(chatId: string | undefined) {

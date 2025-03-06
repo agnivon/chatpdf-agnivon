@@ -14,6 +14,7 @@ import { ChatValidationSchema } from "./_validation";
 import { RunnableLike } from "@langchain/core/runnables";
 import { Document } from "langchain/document";
 import { onCompletion, onStart } from "./_utils";
+import { PINECONE_INDEX } from "@/config/env.config";
 
 //export const runtime = "edge";
 
@@ -46,8 +47,12 @@ import { onCompletion, onStart } from "./_utils";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, chatId, regenerate, openAIApiKey } =
-      ChatValidationSchema.parse(await request.json());
+    const openAIApiKey = request.headers.get("api-key");
+    if (!openAIApiKey)
+      return new NextResponse("API Key required", { status: 400 });
+    const { messages, chatId, regenerate } = ChatValidationSchema.parse(
+      await request.json()
+    );
 
     const query = messages[messages.length - 1].content;
 
@@ -69,11 +74,9 @@ export async function POST(request: NextRequest) {
       onCompletion: onCompletion(regenerate, chatId),
     });
 
-    const vectorStore = await getPineconeVectorStore(
-      process.env.PINECONE_INDEX!,
-      chatId,
-      openAIApiKey
-    );
+    const vectorStore = await getPineconeVectorStore(PINECONE_INDEX, chatId, {
+      openAIApiKey,
+    });
 
     const retriever = vectorStore.asRetriever({
       searchType: "similarity",
@@ -101,7 +104,7 @@ export async function POST(request: NextRequest) {
     const contextualizeQChain = await getContextualizedQRAGChain(
       retriever,
       [handlers],
-      openAIApiKey
+      { openAIApiKey }
     );
 
     contextualizeQChain.invoke({

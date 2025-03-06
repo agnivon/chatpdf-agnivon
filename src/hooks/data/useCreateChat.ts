@@ -1,5 +1,5 @@
 import { CreateChatValidationSchema } from "@/app/api/chat/_validation";
-import { ROUTES } from "@/constants/route.constans";
+import { ROUTES } from "@/constants/route.constants";
 import { useOpenAIApiKey } from "@/store";
 import { CreateChatResponse } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,15 @@ export default function useCreateChat(ragServer: boolean = false) {
   const mutation = useMutation({
     mutationFn: (files: z.infer<typeof CreateChatValidationSchema>["files"]) =>
       axios
-        .post<CreateChatResponse>(url, { files, openAIApiKey })
+        .post<CreateChatResponse>(
+          url,
+          { files },
+          {
+            headers: {
+              "api-key": openAIApiKey,
+            },
+          }
+        )
         .then((res) => res.data),
     onSuccess: async ({ chatId }) => {
       await queryClient.invalidateQueries({ queryKey: ["chats"], exact: true });

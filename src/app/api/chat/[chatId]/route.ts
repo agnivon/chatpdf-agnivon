@@ -1,8 +1,9 @@
+import { PINECONE_INDEX } from "@/config/env.config";
 import { db } from "@/lib/db";
 import { chat, chatDocument } from "@/lib/db/schema";
 import { deleteAllNamespaceVectors } from "@/lib/pinecone/edge";
 import { deleteS3Files } from "@/lib/s3";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,10 +11,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { chatId: string } }
+  props: { params: Promise<{ chatId: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -38,10 +40,11 @@ export async function GET(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { chatId: string } }
+  props: { params: Promise<{ chatId: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -70,7 +73,7 @@ export async function DELETE(
 
     console.log(`Deleted chat: ${chatId}`);
 
-    deleteAllNamespaceVectors(process.env.PINECONE_INDEX!, chatId.toString());
+    deleteAllNamespaceVectors(PINECONE_INDEX, chatId.toString());
 
     deleteS3Files(documentFileKeys);
 

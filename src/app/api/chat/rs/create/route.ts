@@ -1,15 +1,12 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { CreateChatValidationSchema } from "../../_validation";
 import { ZodError } from "zod";
 import axios, { AxiosError } from "axios";
-
-if (!process.env.NEXT_PUBLIC_RAG_SERVER_HOST) {
-  throw new Error(`NEXT_PUBLIC_RAG_SERVER_HOST not defined`);
-}
+import { NEXT_PUBLIC_RAG_SERVER_HOST } from "@/config/env.config";
 
 export async function POST(request: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
@@ -18,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const { chatId } = await axios
       .post<{ chatId: string }>(
-        `${process.env.NEXT_PUBLIC_RAG_SERVER_HOST}/chatpdf/chat/create`,
+        `${NEXT_PUBLIC_RAG_SERVER_HOST}/chatpdf/chat/create`,
         {
           files,
           userId,

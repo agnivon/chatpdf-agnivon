@@ -1,6 +1,6 @@
 "use client";
 
-import { ROUTES } from "@/constants/route.constans";
+import { ROUTES } from "@/constants/route.constants";
 import useDeleteChatUtils from "@/hooks/chat/useDeleteChatUtils";
 import { cn } from "@/lib/utils";
 import { Chat, ChatsResponse } from "@/types";
@@ -53,11 +53,11 @@ export default function ChatSidebar(props: ChatSidebarProps) {
           </Button>
         </Link>
         <div className="my-4 border-b-[0.5px] border-accent-foreground/30" />
-        <div className="flex flex-col gap-3 overflow-y-auto flex-grow">
+        <div className="flex flex-col gap-3 overflow-y-auto grow">
           {chats.length > 0 ? (
             chats.map((chat) => {
               const name =
-              chatDocuments[chat.id]?.map((doc) => doc.name).join(", ") ||
+                chatDocuments[chat.id]?.map((doc) => doc.name).join(", ") ||
                 "Deleted";
               return (
                 <div
