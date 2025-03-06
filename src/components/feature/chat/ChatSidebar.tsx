@@ -53,7 +53,7 @@ export default function ChatSidebar(props: ChatSidebarProps) {
           </Button>
         </Link>
         <div className="my-4 border-b-[0.5px] border-accent-foreground/30" />
-        <div className="flex flex-col gap-3 overflow-y-auto flex-grow">
+        <div className="flex flex-col gap-3 overflow-y-auto grow">
           {chats.length > 0 ? (
             chats.map((chat) => {
               const name =
