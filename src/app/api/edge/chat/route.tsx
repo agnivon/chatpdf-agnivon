@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const response = await pipeline(query, messages, chatId, openAIApiKey);
 
-    const stream = OpenAIStream(response, {
+    const stream = OpenAIStream(response as any, {
       onStart: onStart(query, regenerate, chatId),
       onCompletion: onCompletion(regenerate, chatId),
     });

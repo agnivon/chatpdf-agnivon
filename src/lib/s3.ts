@@ -51,7 +51,7 @@ export async function downloadFilesFromS3(fileKeys: string[]) {
       });
       const response = await s3.send(command);
       const file = await response.Body?.transformToByteArray();
-      const fileBlob = new Blob([file || ""]);
+      const fileBlob = new Blob([(file as any) || ""]);
       return fileBlob;
     })
   );
