@@ -342,7 +342,7 @@ This application is designed to be deployed on [Vercel](https://vercel.com/):
 
 ## 📝 License
 
-This project is private and not licensed for redistribution.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
