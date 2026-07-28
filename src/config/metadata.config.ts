@@ -1,10 +1,11 @@
 import { Metadata } from "next";
-import { VERCEL_PRODUCTION_URL } from "./env.config";
+import { SITE_URL } from "./env.config";
 
 const title = "ChatPDF";
 const description = "Chat with PDFs using LLM powered chat models";
 
 export const siteMetadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: title,
   description: description,
   generator: title,
@@ -27,7 +28,7 @@ export const siteMetadata: Metadata = {
     "AI document reader",
     "intelligent PDF search",
   ],
-  authors: [{ name: "Agnivo Neogi", url: "https://agnivon.com" }],
+  authors: [{ name: "Agnivo Neogi", url: SITE_URL }],
   creator: "Agnivo Neogi",
   publisher: "Agnivo Neogi",
   formatDetection: {
@@ -38,7 +39,7 @@ export const siteMetadata: Metadata = {
   openGraph: {
     title: title,
     description: description,
-    url: VERCEL_PRODUCTION_URL,
+    url: SITE_URL,
     siteName: title,
     locale: "en_US",
     type: "website",

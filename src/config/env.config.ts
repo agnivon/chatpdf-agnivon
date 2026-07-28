@@ -8,10 +8,28 @@ export const VERCEL_BRANCH_URL =
   process.env.VERCEL_BRANCH_URL ||
   process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL ||
   "";
-export const VERCEL_PRODUCTION_URL =
+export const VERCEL_PROJECT_PRODUCTION_URL =
   process.env.VERCEL_PROJECT_PRODUCTION_URL ||
   process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
   "";
+
+export function getSiteUrl(): string {
+  const host =
+    VERCEL_PROJECT_PRODUCTION_URL ||
+    VERCEL_URL ||
+    VERCEL_BRANCH_URL;
+
+  if (host) {
+    return host.startsWith("http://") || host.startsWith("https://")
+      ? host
+      : `https://${host}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
+export const SITE_URL = getSiteUrl();
+export const VERCEL_PRODUCTION_URL = SITE_URL;
 export const VERCEL_BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || "";
 export const DATABASE_URL = process.env.DATABASE_URL || "";
 export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || "";
